@@ -1,1 +1,79 @@
-#  
+# KokoaTalk Enterprise - Development Guidelines (지침서)
+
+본 문서는 카카오톡을 벤치마킹한 엔터프라이즈급 실시간 메신저 애플리케이션인 **KokoaTalk Enterprise**의 개발 표준, 프로젝트 디렉터리 구조 및 실행 가이드를 정의합니다.
+
+> [!WARNING]
+> **프로젝트 구조를 변경하거나 모듈을 추가할 때 본 지침서(README.md)의 구조도를 항상 최신으로 갱신해 주십시오.**
+
+---
+
+## 1. 프로젝트 디렉터리 구조 (Directory Structure)
+
+전체 프로젝트는 FastAPI 백엔드와 Vite + React 프론트엔드로 구성되며 구조는 아래와 같습니다.
+
+```
+talk/
+├── .gitignore             # Git 관리 제외 설정 파일
+├── README.md              # 본 개발 지침서
+├── run.sh                 # 통합 타입 검수, DB 마이그레이션 및 동시 실행 스크립트
+├── backend/               # FastAPI 비동기 백엔드 모듈
+│   ├── app/
+│   │   ├── database.py    # Async SQLAlchemy 엔진 설정 및 세션 팩토리
+│   │   ├── models.py      # SQLAlchemy 데이터 모델 (User, ChatRoom, ChatRoomMember, Message)
+│   │   ├── schemas.py     # Pydantic 요청/응답 스키마 정의
+│   │   ├── crud.py        # 데이터베이스 질의 및 비즈니스 쿼리 (Repository 패턴)
+│   │   └── main.py        # API 엔드포인트 라우터, CORS 관리 및 WebSocket 커넥션 매니저
+│   ├── requirements.txt   # 백엔드 의존성 라이브러리 목록
+│   └── seed.py            # SQLite 데이터베이스 마이그레이션 및 데모 데이터 시딩 스크립트
+└── frontend/              # Vite React 프론트엔드 모듈
+    ├── src/
+    │   ├── components/
+    │   │   └── ui/
+    │   │       └── ScrollArea.tsx   # Radix UI ScrollArea 스크롤바 컴포넌트
+    │   ├── store/
+    │   │   └── useChatStore.ts      # Zustand 상태 관리 및 비동기 API/WebSocket 처리기
+    │   ├── App.tsx        # 메인 웹 UI 대시보드 컴포넌트
+    │   ├── index.css      # Tailwind CSS v4 스타일시트 (카카오 테마 추가)
+    │   └── main.tsx       # React 진입 마운트 파일
+    ├── postcss.config.js  # PostCSS 플러그인 설정
+    └── tailwind.config.js # 테마 및 확장 플러그인 설정
+```
+
+---
+
+## 2. 개발 및 검수 표준 (Development & Verification Standards)
+
+새로운 기능을 추가하거나 패치를 진행할 경우, 다음 단계를 거쳐 점진적으로 병합을 시도하십시오.
+
+### 1) 데이터 모델링 및 스키마 변경
+- DB 관계나 테이블 컬럼을 추가할 경우 [backend/app/models.py](file:///Users/ijeonghyeon/Documents/talk/backend/app/models.py)에 모델을 수정/정의합니다.
+- 이에 대칭되는 직렬화용 Pydantic 규격을 [backend/app/schemas.py](file:///Users/ijeonghyeon/Documents/talk/backend/app/schemas.py)에 맞춰 추가합니다.
+- 데이터 관계 필드명 불일치로 인한 API 바인딩 에러(`ResponseValidationError`)를 막기 위해, 데이터 반환 시 수동 스키마 매핑을 진행하도록 권장합니다.
+
+### 2) 비동기성 최적화
+- 데이터베이스 세션은 반드시 비동기 컨텍스트(`AsyncSession`)를 활용해 조회합니다.
+- 실시간 알림이나 메시지 전송은 WebSocket 라우터([main.py](file:///Users/ijeonghyeon/Documents/talk/backend/app/main.py#L235-L252))와 `ConnectionManager`를 통해 브로드캐스트합니다.
+
+### 3) 프론트엔드 상태 연동 및 UI
+- UI 리스트 컴포넌트는 포커스 및 키보드 접근성 확보를 위해 Radix UI 스크롤 컴포넌트([ScrollArea.tsx](file:///Users/ijeonghyeon/Documents/talk/frontend/src/components/ui/ScrollArea.tsx))를 이용해 구현합니다.
+- 상태 변경 시 리스트를 최신 메시지 순으로 실시간 재정렬하도록 Zustand 스토어([useChatStore.ts](file:///Users/ijeonghyeon/Documents/talk/frontend/src/store/useChatStore.ts))에 변경 사항을 정교화합니다.
+
+---
+
+## 3. 검수 및 실행 방법 (How to Verify & Run)
+
+검수 및 동시 구동을 자동화한 스크립트인 [run.sh](file:///Users/ijeonghyeon/Documents/talk/run.sh)가 루트 폴더에 준비되어 있습니다.
+
+```bash
+# 실행 권한 부여 (필요 시)
+chmod +x run.sh
+
+# 검수 및 실행 스크립트 실행
+./run.sh
+```
+
+### 이 스크립트의 작동 단계:
+1. **백엔드 정적 검수**: Python 3.12 venv 내 의존성 패키지 확인 후, `compileall`로 전체 `.py` 파일의 문법적 오류를 사전 탐지합니다.
+2. **프론트엔드 타입 검수**: `tsc --noEmit`을 통해 전체 TypeScript 형식에 불일치가 없는지 컴파일 레벨 검사를 수행합니다.
+3. **DB 테이블 빌드 & 시딩**: 기존 SQLite 테이블을 초기화하고 테스트용 인물 정보(홍길동, 이순신, 세종대왕, 김유신)와 데모 채팅방을 빌드합니다.
+4. **동시 실행**: FastAPI(포트 8000) 및 Vite(포트 5173)을 동시에 구동하고 단일 단말기 세션 내에서 Ctrl+C 입력 시 모든 하위 프로세스를 안전하게 함께 종료합니다.
