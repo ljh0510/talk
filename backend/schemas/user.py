@@ -103,10 +103,10 @@ class UserResponse(BaseModel):
     active_membership: Optional[WorkspaceMembershipResponse] = None
     model_config = ConfigDict(from_attributes=True)
 
-class FriendAdd(BaseModel):
-    friend_email: EmailStr = Field(...)
+class MemberAdd(BaseModel):
+    member_email: EmailStr = Field(...)
 
-class FriendResponse(BaseModel):
-    friend_id: int
-    friend: UserResponse
+class MemberRelationResponse(BaseModel):
+    member_id: int
+    member: UserResponse
     model_config = ConfigDict(from_attributes=True)

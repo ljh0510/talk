@@ -3,12 +3,12 @@ from sqlalchemy import String, DateTime, ForeignKey, Integer, Boolean, UniqueCon
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.database import Base
 
-class Friendship(Base):
-    __tablename__ = "friends"
+class MemberRelation(Base):
+    __tablename__ = "member_relations"
 
     workspace_id: Mapped[int] = mapped_column(Integer, ForeignKey("workspaces.id", ondelete="CASCADE"), primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    friend_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    member_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -17,8 +17,8 @@ class Friendship(Base):
 
     # Relationships
     workspace: Mapped["Workspace"] = relationship("Workspace")
-    user: Mapped["User"] = relationship("User", foreign_keys=[user_id], back_populates="friends")
-    friend: Mapped["User"] = relationship("User", foreign_keys=[friend_id])
+    user: Mapped["User"] = relationship("User", foreign_keys=[user_id], back_populates="member_relations")
+    member: Mapped["User"] = relationship("User", foreign_keys=[member_id])
 
 
 class Workspace(Base):
@@ -177,7 +177,7 @@ class User(Base):
     )
 
     # Relationships
-    friends: Mapped[list["Friendship"]] = relationship("Friendship", foreign_keys=[Friendship.user_id], back_populates="user", cascade="all, delete-orphan")
+    member_relations: Mapped[list["MemberRelation"]] = relationship("MemberRelation", foreign_keys=[MemberRelation.user_id], back_populates="user", cascade="all, delete-orphan")
     room_memberships: Mapped[list["ChatRoomMember"]] = relationship("ChatRoomMember", back_populates="user", cascade="all, delete-orphan")
     messages: Mapped[list["Message"]] = relationship("Message", back_populates="sender", cascade="all, delete-orphan")
     department_memberships: Mapped[list["DepartmentMember"]] = relationship("DepartmentMember", back_populates="user", cascade="all, delete-orphan")

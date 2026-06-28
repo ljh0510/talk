@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand'
-import type { User, Friendship, Message, ChatRoom, ChatRoomDetail } from '../types'
+import type { User, MemberRelation, Message, ChatRoom, ChatRoomDetail } from '../types'
 
 const API_BASE = 'http://localhost:8080/api'
 const WS_BASE = 'ws://localhost:8080/ws'
@@ -34,11 +34,11 @@ export function normalizeUser(user: any): User {
   }
 }
 
-export function normalizeFriend(f: any): Friendship {
+export function normalizeMemberRelation(f: any): MemberRelation {
   if (!f) return f
   return {
     ...f,
-    friend: normalizeUser(f.friend)
+    member: normalizeUser(f.member)
   }
 }
 
@@ -47,7 +47,8 @@ interface ChatStore {
   accessToken: string | null
   activeWorkspaceId: number | null
   users: User[]
-  friends: Friendship[]
+  friends: any // Deprecated, keep for safety during compilation or replace if not needed. But we renamed to members:
+  members: MemberRelation[]
   chatRooms: ChatRoom[]
   activeRoomId: number | null
   activeRoomDetail: ChatRoomDetail | null
@@ -65,8 +66,8 @@ interface ChatStore {
   fetchUsers: () => Promise<void>
   
   // Friends actions
-  fetchFriends: () => Promise<void>
-  addFriend: (email: string) => Promise<{ success: boolean; error?: string }>
+  fetchMembers: () => Promise<void>
+  addMemberRelation: (email: string) => Promise<{ success: boolean; error?: string }>
   updateMyProfile: (nickname: string, statusMessage: string, profileImageUrl?: string) => Promise<boolean>
 
   // Rooms and Messages actions
@@ -102,7 +103,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   })(),
   users: [],
-  friends: [],
+  friends: [], // Deprecated
+  members: [],
   chatRooms: [],
   activeRoomId: null,
   activeRoomDetail: null,
@@ -174,7 +176,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       if (wsIdToSet) {
         get().setupWebSocket()
         get().fetchChatRooms()
-        get().fetchFriends()
+        get().fetchMembers()
         get().fetchUsers()
       }
       
@@ -224,7 +226,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       accessToken: null, 
       activeWorkspaceId: null,
       chatRooms: [], 
-      friends: [],
+      friends: [], // Deprecated
+      members: [],
       users: [],
       activeRoomId: null, 
       activeRoomDetail: null, 
@@ -259,13 +262,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       activeRoomId: null,
       activeRoomDetail: null,
       chatRooms: [],
-      friends: [],
+      friends: [], // Deprecated
+      members: [],
       users: []
     })
 
     // Reload workspace-isolated resources
     await Promise.all([
-      get().fetchFriends(),
+      get().fetchMembers(),
       get().fetchChatRooms(),
       get().fetchUsers()
     ])
@@ -290,46 +294,46 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  fetchFriends: async () => {
+  fetchMembers: async () => {
     const { accessToken, activeWorkspaceId } = get()
     if (!accessToken) return
     try {
-      const response = await fetch(`${API_BASE}/friends`, {
+      const response = await fetch(`${API_BASE}/members`, {
         headers: { 
           'Authorization': `Bearer ${accessToken}`,
           'X-Workspace-ID': activeWorkspaceId ? String(activeWorkspaceId) : ''
         }
       })
       if (response.ok) {
-        const friends = await response.json()
-        set({ friends: friends.map(normalizeFriend) })
+        const members = await response.json()
+        set({ members: members.map(normalizeMemberRelation) })
       }
     } catch (err) {
-      console.error("Failed to fetch friends", err)
+      console.error("Failed to fetch members", err)
     }
   },
 
-  addFriend: async (email) => {
+  addMemberRelation: async (email) => {
     const { accessToken, activeWorkspaceId } = get()
     if (!accessToken) return { success: false, error: '로그인이 필요합니다.' }
     try {
-      const response = await fetch(`${API_BASE}/friends`, {
+      const response = await fetch(`${API_BASE}/members`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
           'X-Workspace-ID': activeWorkspaceId ? String(activeWorkspaceId) : ''
         },
-        body: JSON.stringify({ friend_email: email }),
+        body: JSON.stringify({ member_email: email }),
       })
       const data = await response.json()
       if (!response.ok) {
-        return { success: false, error: data.detail || '친구 추가에 실패했습니다.' }
+        return { success: false, error: data.detail || '멤버 추가에 실패했습니다.' }
       }
       
-      const normalizedData = normalizeFriend(data)
+      const normalizedData = normalizeMemberRelation(data)
       set((state) => ({
-        friends: [...state.friends, normalizedData]
+        members: [...state.members, normalizedData]
       }))
       return { success: true }
     } catch (err) {

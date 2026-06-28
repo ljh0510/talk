@@ -16,7 +16,7 @@ async def seed_data():
     print("Initializing Database Schemas...")
     async with engine.begin() as conn:
         # Safe cascade drops for PostgreSQL to bypass schema locks
-        for tbl in ["workspace_members", "department_members", "friends", "messages", "chat_room_members", "chat_rooms", "users", "departments", "workspaces", "positions", "duties"]:
+        for tbl in ["workspace_members", "department_members", "member_relations", "messages", "chat_room_members", "chat_rooms", "users", "departments", "workspaces", "positions", "duties"]:
             await conn.execute(text(f"DROP TABLE IF EXISTS {tbl} CASCADE"))
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
@@ -463,31 +463,31 @@ async def seed_data():
         db.add_all([hm1, hm2])
         await db.flush()
 
-        # Seed Friendships (Isolated inside Kakao Enterprise workspace)
+        # Seed MemberRelations (Isolated inside Kakao Enterprise workspace)
         if w1:
-            print("Seeding Friendships...")
-            f1 = models.Friendship(workspace_id=w1, user_id=db_u1.id, friend_id=db_u2.id)
-            f2 = models.Friendship(workspace_id=w1, user_id=db_u1.id, friend_id=db_u3.id)
-            f3 = models.Friendship(workspace_id=w1, user_id=db_u1.id, friend_id=db_u4.id)
-            f4 = models.Friendship(workspace_id=w1, user_id=db_u1.id, friend_id=db_u5.id) # Hong - Hwang
+            print("Seeding MemberRelations...")
+            f1 = models.MemberRelation(workspace_id=w1, user_id=db_u1.id, member_id=db_u2.id)
+            f2 = models.MemberRelation(workspace_id=w1, user_id=db_u1.id, member_id=db_u3.id)
+            f3 = models.MemberRelation(workspace_id=w1, user_id=db_u1.id, member_id=db_u4.id)
+            f4 = models.MemberRelation(workspace_id=w1, user_id=db_u1.id, member_id=db_u5.id) # Hong - Hwang
             
-            f5 = models.Friendship(workspace_id=w1, user_id=db_u2.id, friend_id=db_u1.id)
-            f6 = models.Friendship(workspace_id=w1, user_id=db_u2.id, friend_id=db_u3.id)
-            f7 = models.Friendship(workspace_id=w1, user_id=db_u2.id, friend_id=db_u5.id) # Lee - Hwang
+            f5 = models.MemberRelation(workspace_id=w1, user_id=db_u2.id, member_id=db_u1.id)
+            f6 = models.MemberRelation(workspace_id=w1, user_id=db_u2.id, member_id=db_u3.id)
+            f7 = models.MemberRelation(workspace_id=w1, user_id=db_u2.id, member_id=db_u5.id) # Lee - Hwang
             
-            f8 = models.Friendship(workspace_id=w1, user_id=db_u3.id, friend_id=db_u1.id)
-            f9 = models.Friendship(workspace_id=w1, user_id=db_u4.id, friend_id=db_u1.id)
-            f10 = models.Friendship(workspace_id=w1, user_id=db_u3.id, friend_id=db_u2.id)
-            f11 = models.Friendship(workspace_id=w1, user_id=db_u5.id, friend_id=db_u1.id) # Hwang - Hong
-            f12 = models.Friendship(workspace_id=w1, user_id=db_u5.id, friend_id=db_u2.id) # Hwang - Lee
+            f8 = models.MemberRelation(workspace_id=w1, user_id=db_u3.id, member_id=db_u1.id)
+            f9 = models.MemberRelation(workspace_id=w1, user_id=db_u4.id, member_id=db_u1.id)
+            f10 = models.MemberRelation(workspace_id=w1, user_id=db_u3.id, member_id=db_u2.id)
+            f11 = models.MemberRelation(workspace_id=w1, user_id=db_u5.id, member_id=db_u1.id) # Hwang - Hong
+            f12 = models.MemberRelation(workspace_id=w1, user_id=db_u5.id, member_id=db_u2.id) # Hwang - Lee
             
             db.add_all([f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12])
 
-        # Seed Friendships (Isolated inside 한글문화재단 workspace)
+        # Seed MemberRelations (Isolated inside 한글문화재단 workspace)
         if w3:
             # Sejong - Saimdang
-            f13 = models.Friendship(workspace_id=w3, user_id=db_u3.id, friend_id=db_u6.id)
-            f14 = models.Friendship(workspace_id=w3, user_id=db_u6.id, friend_id=db_u3.id)
+            f13 = models.MemberRelation(workspace_id=w3, user_id=db_u3.id, member_id=db_u6.id)
+            f14 = models.MemberRelation(workspace_id=w3, user_id=db_u6.id, member_id=db_u3.id)
             db.add_all([f13, f14])
 
         await db.commit()

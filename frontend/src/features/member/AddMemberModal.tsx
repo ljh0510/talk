@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ScrollArea } from '../../components/ui/ScrollArea'
 import { UserPlus, Search, Check, Plus, Folder, Users, ChevronDown, ChevronRight, MapPin, Crown } from 'lucide-react'
 
-interface AddFriendModalProps {
+interface AddMemberModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -16,8 +16,8 @@ interface DeptNode {
   children: DeptNode[];
 }
 
-export function AddFriendModal({ open, onOpenChange }: AddFriendModalProps) {
-  const { users, friends, currentUser, addFriend } = useChatStore()
+export function AddMemberModal({ open, onOpenChange }: AddMemberModalProps) {
+  const { users, members, currentUser, addMemberRelation } = useChatStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedDept, setSelectedDept] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
@@ -154,11 +154,11 @@ export function AddFriendModal({ open, onOpenChange }: AddFriendModalProps) {
     return true
   })
 
-  const handleAddFriend = async (email: string) => {
+  const handleAddMember = async (email: string) => {
     setErrorMsg('')
-    const res = await addFriend(email)
+    const res = await addMemberRelation(email)
     if (!res.success) {
-      setErrorMsg(res.error || '친구 추가에 실패했습니다.')
+      setErrorMsg(res.error || '멤버 추가에 실패했습니다.')
     }
   }
 
@@ -225,10 +225,10 @@ export function AddFriendModal({ open, onOpenChange }: AddFriendModalProps) {
         <DialogHeader className="p-5 border-b border-slate-100 dark:border-zinc-800 shrink-0">
           <DialogTitle className="text-sm font-extrabold text-slate-800 dark:text-zinc-100 flex items-center space-x-1.5">
             <UserPlus size={18} className="text-slate-500" />
-            <span>조직도 친구 추가</span>
+            <span>조직도 멤버 추가</span>
           </DialogTitle>
           <DialogDescription className="text-[11px] text-slate-400 mt-1">
-            사내 조직도 트리에서 부서를 선택하고 임직원을 확인하여 편리하게 친구를 추가하세요.
+            사내 조직도 트리에서 부서를 선택하고 임직원을 확인하여 편리하게 멤버를 추가하세요.
           </DialogDescription>
         </DialogHeader>
 
@@ -241,7 +241,7 @@ export function AddFriendModal({ open, onOpenChange }: AddFriendModalProps) {
         {/* 2-Column Main Content Container with Resizing ref and mouse-select block */}
         <div
           ref={containerRef}
-          className={`flex-1 min-h-0 flex bg-slate-50/50 dark:bg-zinc-950/20 relative ${
+          className={`flex-1 min-h-0 flex bg-slate-50/50 dark:bg-zinc-955/20 relative ${
             isResizing ? 'select-none cursor-col-resize' : ''
           }`}
         >
@@ -305,7 +305,7 @@ export function AddFriendModal({ open, onOpenChange }: AddFriendModalProps) {
                 placeholder="사원 이름, 직급, 부서 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8.5 pr-3 py-1.5 text-[10px] rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-kakao-yellow transition-all"
+                className="w-full pl-8.5 pr-3 py-1.5 text-[10px] rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-200 placeholder-slate-404 focus:outline-none focus:ring-1 focus:ring-kakao-yellow transition-all"
               />
             </div>
 
@@ -314,7 +314,7 @@ export function AddFriendModal({ open, onOpenChange }: AddFriendModalProps) {
               <div className="space-y-2 pr-2 pb-4">
                 {filteredUsers.length > 0 ? (
                   filteredUsers.map((u) => {
-                    const isFriend = friends.some((f) => f.friend.id === u.id)
+                    const isMember = members.some((m) => m.member.id === u.id)
                     const isLeader = selectedDept 
                       ? (u.department === selectedDept && u.id === u.department_manager_id)
                       : (u.id === u.department_manager_id)
@@ -329,7 +329,7 @@ export function AddFriendModal({ open, onOpenChange }: AddFriendModalProps) {
                             <img
                               src={u.profile_image_url}
                               alt={u.nickname || u.username}
-                              className="w-9 h-9 rounded-xl object-cover border border-slate-100/80 dark:border-zinc-800 shadow-sm"
+                              className="w-9 h-9 rounded-xl object-cover border border-slate-100/85 dark:border-zinc-800 shadow-sm"
                             />
                           ) : (
                             <div className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-zinc-800 flex items-center justify-center text-slate-500 dark:text-zinc-400 text-xs font-bold border border-slate-200 dark:border-zinc-700">
@@ -357,14 +357,14 @@ export function AddFriendModal({ open, onOpenChange }: AddFriendModalProps) {
 
                         {/* Button with whitespace-nowrap and min-w to prevent text breaking */}
                         <div className="flex-shrink-0 ml-3">
-                          {isFriend ? (
+                          {isMember ? (
                             <span className="inline-flex items-center justify-center space-x-1 min-w-[56px] px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-zinc-900 text-slate-400 dark:text-zinc-500 text-[9px] font-bold border border-slate-100 dark:border-zinc-800/60 whitespace-nowrap">
                               <Check size={10} strokeWidth={3} />
-                              <span>친구</span>
+                              <span>멤버</span>
                             </span>
                           ) : (
                             <button
-                              onClick={() => handleAddFriend(u.email)}
+                              onClick={() => handleAddMember(u.email)}
                               className="inline-flex items-center justify-center space-x-1 min-w-[56px] px-2.5 py-1.5 rounded-lg bg-kakao-yellow hover:bg-yellow-400 text-kakao-brown text-[9px] font-extrabold shadow-sm transition-all cursor-pointer hover:scale-[1.03] active:scale-[0.97] whitespace-nowrap"
                             >
                               <Plus size={10} strokeWidth={3} />

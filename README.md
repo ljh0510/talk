@@ -37,7 +37,7 @@ talk/
     │   ├── features/      # 기능/도메인 중심 컴포넌트 분류 (Features)
     │   │   ├── auth/      # 인증 관련 기능
     │   │   ├── chat/      # 채팅 관련 기능
-    │   │   └── friend/    # 친구 및 프로필 관련 기능
+    │   │   └── member/    # 멤버 및 프로필 관련 기능
     │   ├── store/
     │   │   └── useChatStore.ts      # Zustand 상태 관리 및 비동기 API/WebSocket 처리기
     │   ├── types/

@@ -3,8 +3,8 @@ import { useChatStore } from '../../store/useChatStore'
 import { Users, MessageCircle, Search, Bell, BellOff, Settings, LogOut, XSquare, MoreHorizontal } from 'lucide-react'
 
 interface SidebarProps {
-  activeTab: 'friends' | 'chats' | 'settings' | 'more' | 'workspaces'
-  setActiveTab: (tab: 'friends' | 'chats' | 'settings' | 'more' | 'workspaces') => void
+  activeTab: 'members' | 'chats' | 'settings' | 'more' | 'workspaces'
+  setActiveTab: (tab: 'members' | 'chats' | 'settings' | 'more' | 'workspaces') => void
   onTriggerLogout: () => void
   onTriggerExit: () => void
 }
@@ -53,17 +53,17 @@ export function Sidebar({
     <div className="w-[72px] bg-slate-200 dark:bg-zinc-900 border-r border-slate-300 dark:border-zinc-800 flex flex-col items-center py-6 justify-between select-none shrink-0">
       <div className="flex flex-col items-center space-y-4 w-full">
 
-        {/* 1. Friends List Tab Button */}
+        {/* 1. Members List Tab Button */}
         <button
-          onClick={() => setActiveTab('friends')}
+          onClick={() => setActiveTab('members')}
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${
-            activeTab === 'friends'
+            activeTab === 'members'
               ? 'bg-primary-accent text-primary-accent-text shadow'
               : 'text-slate-500 hover:bg-slate-300/50 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-200'
           }`}
-          title="친구 목록"
+          title="멤버 목록"
         >
-          <Users size={24} fill={activeTab === 'friends' ? 'currentColor' : 'none'} />
+          <Users size={24} fill={activeTab === 'members' ? 'currentColor' : 'none'} />
         </button>
 
         {/* 2. Chat List Tab Button */}

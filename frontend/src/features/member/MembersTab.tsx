@@ -4,13 +4,13 @@ import { ProfileCardModal } from './ProfileCardModal'
 import { ProfileEditModal } from './ProfileEditModal'
 import type { User } from '../../types'
 
-interface FriendsTabProps {
+interface MembersTabProps {
   searchQuery: string
-  setActiveTab: (tab: 'friends' | 'chats' | 'settings' | 'more') => void
+  setActiveTab: (tab: 'members' | 'chats' | 'settings' | 'more') => void
 }
 
-export function FriendsTab({ searchQuery, setActiveTab }: FriendsTabProps) {
-  const { currentUser, friends, chatRooms, setActiveRoomId, createChatRoom } = useChatStore()
+export function MembersTab({ searchQuery, setActiveTab }: MembersTabProps) {
+  const { currentUser, members, chatRooms, setActiveRoomId, createChatRoom } = useChatStore()
   
   const [isMyProfileEditOpen, setIsMyProfileEditOpen] = useState(false)
   const [isProfileCardOpen, setIsProfileCardOpen] = useState(false)
@@ -30,14 +30,14 @@ export function FriendsTab({ searchQuery, setActiveTab }: FriendsTabProps) {
     setActiveTab('chats')
   }
 
-  const activeFriendships = friends
+  const activeRelations = members
 
-  const filteredFriends = activeFriendships.filter(f => {
+  const filteredMembers = activeRelations.filter(m => {
     const q = searchQuery.toLowerCase().trim()
     if (!q) return true
     return (
-      f.friend.nickname.toLowerCase().includes(q) ||
-      f.friend.username.toLowerCase().includes(q)
+      m.member.nickname.toLowerCase().includes(q) ||
+      m.member.username.toLowerCase().includes(q)
     )
   })
 
@@ -63,46 +63,46 @@ export function FriendsTab({ searchQuery, setActiveTab }: FriendsTabProps) {
         </div>
       </div>
 
-      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">친구 리스트 ({filteredFriends.length})</h4>
+      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">멤버 리스트 ({filteredMembers.length})</h4>
       
-      {filteredFriends.length === 0 ? (
-        <div className="text-center py-8 text-xs text-slate-400">검색된 친구가 없습니다.</div>
+      {filteredMembers.length === 0 ? (
+        <div className="text-center py-8 text-xs text-slate-400">검색된 멤버가 없습니다.</div>
       ) : (
-        [...filteredFriends].sort((a, b) => {
-          const aDept = a.friend.department_sort_order ?? 9999
-          const bDept = b.friend.department_sort_order ?? 9999
+        [...filteredMembers].sort((a, b) => {
+          const aDept = a.member.department_sort_order ?? 9999
+          const bDept = b.member.department_sort_order ?? 9999
           if (aDept !== bDept) return aDept - bDept
 
-          const aPos = a.friend.position_sort_order ?? 9999
-          const bPos = b.friend.position_sort_order ?? 9999
+          const aPos = a.member.position_sort_order ?? 9999
+          const bPos = b.member.position_sort_order ?? 9999
           if (aPos !== bPos) return aPos - bPos
 
-          const aDuty = a.friend.duty_sort_order ?? 9999
-          const bDuty = b.friend.duty_sort_order ?? 9999
+          const aDuty = a.member.duty_sort_order ?? 9999
+          const bDuty = b.member.duty_sort_order ?? 9999
           if (aDuty !== bDuty) return aDuty - bDuty
 
-          return a.friend.nickname.localeCompare(b.friend.nickname)
-        }).map(f => (
+          return a.member.nickname.localeCompare(b.member.nickname)
+        }).map(m => (
           <div
-            key={f.friend_id}
+            key={m.member_id}
             onClick={() => {
-              setSelectedProfileUser(f.friend)
+              setSelectedProfileUser(m.member)
               setIsProfileCardOpen(true)
             }}
             className="p-2.5 rounded-xl hover:bg-slate-200/50 dark:hover:bg-zinc-800/30 flex items-center justify-between transition-colors group cursor-pointer"
           >
             <div className="flex items-center space-x-3 min-w-0 flex-1">
               <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-300 dark:bg-zinc-800 flex items-center justify-center text-slate-700 dark:text-zinc-300 font-bold border border-slate-200 dark:border-zinc-800 shrink-0">
-                {f.friend.profile_image_url ? (
-                  <img src={f.friend.profile_image_url} alt={f.friend.nickname} className="w-full h-full object-cover" />
+                {m.member.profile_image_url ? (
+                  <img src={m.member.profile_image_url} alt={m.member.nickname} className="w-full h-full object-cover" />
                 ) : (
-                  f.friend.nickname[0]
+                  m.member.nickname[0]
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-xs font-bold text-slate-800 dark:text-zinc-100">{f.friend.nickname}</h3>
+                <h3 className="text-xs font-bold text-slate-800 dark:text-zinc-100">{m.member.nickname}</h3>
                 <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                  {f.friend.status_message || ''}
+                  {m.member.status_message || ''}
                 </p>
               </div>
             </div>

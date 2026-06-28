@@ -3,7 +3,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
 from core.database import engine, Base
-from routers import auth, users, friends, chats
+from routers import auth, users, members, chats
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -32,7 +32,7 @@ app.add_middleware(
 # Register REST Routers under /api
 app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
-app.include_router(friends.router, prefix="/api")
+app.include_router(members.router, prefix="/api")
 app.include_router(chats.router, prefix="/api")
 
 @app.get("/")

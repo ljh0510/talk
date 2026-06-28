@@ -41,7 +41,7 @@ talk/
     │   ├── features/      # 기능/도메인 중심 컴포넌트 분류 (Features)
     │   │   ├── auth/      # 인증 관련 기능
     │   │   ├── chat/      # 채팅 관련 기능
-    │   │   └── friend/    # 친구 및 프로필 관련 기능
+    │   │   └── member/    # 멤버 및 프로필 관련 기능
     │   ├── store/
     │   │   └── useChatStore.ts      # Zustand 상태 관리 및 비동기 API/WebSocket 처리기
     │   ├── types/
@@ -66,7 +66,7 @@ talk/
 - **CORS 설정 주의**: 브라우저 보안에 따라 `allow_credentials=True`인 경우 `allow_origins=["*"]`를 사용할 수 없습니다. 오리진 명세 시 `allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"]`와 같이 구체적인 호스트명을 사용하십시오.
 
 ### 2) Frontend (Vite, React, Radix UI, Tailwind CSS v4, Zustand)
-- **스크롤 접근성**: 대화 목록, 친구 목록 등 긴 리스크 스크롤은 Radix UI ScrollArea Primitive를 래핑한 [ScrollArea.tsx](file:///Users/ijeonghyeon/Documents/talk/frontend/src/components/ui/ScrollArea.tsx)를 필수 적용하여 접근성 표준을 준수합니다.
+- **스크롤 접근성**: 대화 목록, 멤버 목록 등 긴 리스트 스크롤은 Radix UI ScrollArea Primitive를 래핑한 [ScrollArea.tsx](file:///Users/ijeonghyeon/Documents/talk/frontend/src/components/ui/ScrollArea.tsx)를 필수 적용하여 접근성 표준을 준수합니다.
 - **Tailwind CSS v4 스타일링 규칙**: Tailwind CSS v4를 사용하므로 커스텀 컬러 및 테마 속성은 `tailwind.config.js`가 아닌 [index.css](file:///Users/ijeonghyeon/Documents/talk/frontend/src/index.css) 내의 `@theme { ... }` 지시어 아래 정의합니다.
 - **실시간 UI 정렬**: 새로운 메시지가 웹소켓을 통해 도착하면 Zustand 스토어([useChatStore.ts](file:///Users/ijeonghyeon/Documents/talk/frontend/src/store/useChatStore.ts))에서 해당 대화방의 최근 대화 데이터를 업데이트한 뒤 **즉시 대화방 목록을 최상단으로 재정렬**하는 로직을 일관되게 보존해야 합니다.
 

@@ -12,7 +12,7 @@ interface ChatsTabProps {
 }
 
 export function ChatsTab({ searchQuery, sortType }: ChatsTabProps) {
-  const { currentUser, chatRooms, activeRoomId, setActiveRoomId, friends } = useChatStore()
+  const { currentUser, chatRooms, activeRoomId, setActiveRoomId, members } = useChatStore()
   
   // Custom chat folders configuration stored in localStorage
   const [folders, setFolders] = useState<ChatFolder[]>(() => {
@@ -75,8 +75,8 @@ export function ChatsTab({ searchQuery, sortType }: ChatsTabProps) {
     if (room.is_group) return false
     const otherMember = room.members.find(m => m.id !== currentUser.id)
     if (!otherMember) return false
-    const friendship = friends.find(f => f.friend_id === otherMember.id)
-    return !!friendship
+    const memberRelation = members.find(m => m.member_id === otherMember.id)
+    return !!memberRelation
   }
 
   // 4. Sort rooms based on sortType

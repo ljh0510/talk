@@ -250,12 +250,12 @@ async def get_users_list(db: AsyncSession, exclude_user_id: int):
     return users
 
 
-async def get_friends_list(db: AsyncSession, user_id: int, workspace_id: int):
+async def get_member_relations_list(db: AsyncSession, user_id: int, workspace_id: int):
     # Bidirectional query gets entries for this specific user
     result = await db.execute(
-        select(models.Friendship)
+        select(models.MemberRelation)
         .options(
-            joinedload(models.Friendship.friend).options(
+            joinedload(models.MemberRelation.member).options(
                 joinedload(models.User.workspace_memberships).joinedload(models.WorkspaceMember.workspace),
                 joinedload(models.User.department_memberships)
                     .joinedload(models.DepartmentMember.department)
@@ -266,61 +266,61 @@ async def get_friends_list(db: AsyncSession, user_id: int, workspace_id: int):
         )
         .where(
             and_(
-                models.Friendship.user_id == user_id,
-                models.Friendship.workspace_id == workspace_id
+                models.MemberRelation.user_id == user_id,
+                models.MemberRelation.workspace_id == workspace_id
             )
         )
     )
     return result.scalars().unique().all()
 
 
-async def add_friend(db: AsyncSession, user_id: int, friend_email: str, workspace_id: int):
-    friend_user = await get_user_by_email(db, friend_email)
-    if not friend_user:
+async def add_member_relation(db: AsyncSession, user_id: int, member_email: str, workspace_id: int):
+    member_user = await get_user_by_email(db, member_email)
+    if not member_user:
         return None, "존재하지 않는 사용자입니다."
-    if friend_user.id == user_id:
-        return None, "자기 자신은 친구로 추가할 수 없습니다."
+    if member_user.id == user_id:
+        return None, "자기 자신은 멤버로 추가할 수 없습니다."
         
     # Check if friend is a member of the workspace
     res_member = await db.execute(
         select(models.WorkspaceMember).where(
             and_(
                 models.WorkspaceMember.workspace_id == workspace_id,
-                models.WorkspaceMember.user_id == friend_user.id
+                models.WorkspaceMember.user_id == member_user.id
             )
         )
     )
     if not res_member.scalars().first():
         return None, "해당 워크스페이스에 참여하지 않은 사용자입니다."
         
-    stmt = select(models.Friendship).where(
+    stmt = select(models.MemberRelation).where(
         and_(
-            models.Friendship.workspace_id == workspace_id,
-            models.Friendship.user_id == user_id,
-            models.Friendship.friend_id == friend_user.id
+            models.MemberRelation.workspace_id == workspace_id,
+            models.MemberRelation.user_id == user_id,
+            models.MemberRelation.member_id == member_user.id
         )
     )
     existing_result = await db.execute(stmt)
     existing = existing_result.scalars().first()
     if existing:
-        return None, "이미 친구로 추가된 사용자입니다."
+        return None, "이미 멤버로 추가된 사용자입니다."
             
     # Insert bidirectional records (2 entries)
-    db_friendship_1 = models.Friendship(
+    db_member_relation_1 = models.MemberRelation(
         workspace_id=workspace_id,
         user_id=user_id,
-        friend_id=friend_user.id
+        member_id=member_user.id
     )
-    db_friendship_2 = models.Friendship(
+    db_member_relation_2 = models.MemberRelation(
         workspace_id=workspace_id,
-        user_id=friend_user.id,
-        friend_id=user_id
+        user_id=member_user.id,
+        member_id=user_id
     )
-    db.add_all([db_friendship_1, db_friendship_2])
+    db.add_all([db_member_relation_1, db_member_relation_2])
     await db.commit()
     
-    stmt_reload = select(models.Friendship).options(
-        joinedload(models.Friendship.friend).options(
+    stmt_reload = select(models.MemberRelation).options(
+        joinedload(models.MemberRelation.member).options(
             joinedload(models.User.workspace_memberships).joinedload(models.WorkspaceMember.workspace),
             joinedload(models.User.department_memberships)
                 .joinedload(models.DepartmentMember.department)
@@ -330,9 +330,9 @@ async def add_friend(db: AsyncSession, user_id: int, friend_email: str, workspac
         )
     ).where(
         and_(
-            models.Friendship.workspace_id == workspace_id,
-            models.Friendship.user_id == user_id,
-            models.Friendship.friend_id == friend_user.id
+            models.MemberRelation.workspace_id == workspace_id,
+            models.MemberRelation.user_id == user_id,
+            models.MemberRelation.member_id == member_user.id
         )
     )
     reload_res = await db.execute(stmt_reload)

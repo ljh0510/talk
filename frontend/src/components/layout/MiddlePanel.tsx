@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { Search, Plus, UserPlus, ChevronDown, Check } from 'lucide-react'
-import { FriendsTab } from '../../features/friend/FriendsTab'
+import { MembersTab } from '../../features/member/MembersTab'
 import { ChatsTab } from '../../features/chat/ChatsTab'
-import { SettingsTab } from '../../features/friend/SettingsTab'
-import { MoreTab } from '../../features/friend/MoreTab'
+import { SettingsTab } from '../../features/member/SettingsTab'
+import { MoreTab } from '../../features/member/MoreTab'
 import { CreateRoomModal } from '../../features/chat/CreateRoomModal'
-import { AddFriendModal } from '../../features/friend/AddFriendModal'
+import { AddMemberModal } from '../../features/member/AddMemberModal'
 import { FolderManageModal } from '../modal/FolderManageModal'
 import type { ChatFolder } from '../modal/FolderManageModal'
 import { useChatStore } from '../../store/useChatStore'
 
-type TabType = 'friends' | 'chats' | 'settings' | 'more' | 'workspaces'
+type TabType = 'members' | 'chats' | 'settings' | 'more' | 'workspaces'
 type SubTabType = 'general' | 'style' | 'security'
 type MoreAppType = 'profile' | 'style' | 'security' | 'info' | 'notifications'
 
@@ -47,7 +47,7 @@ export function MiddlePanel({
 
   // Local Modal visibility state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [isAddFriendOpen, setIsAddFriendOpen] = useState(false)
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
 
   // Local state to toggle search input box visibility
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -65,7 +65,7 @@ export function MiddlePanel({
 
   const getPanelTitle = () => {
     switch (activeTab) {
-      case 'friends': return '친구'
+      case 'members': return '멤버'
       case 'chats': return '채팅'
       case 'settings': return '설정'
       case 'more': return '더보기'
@@ -193,7 +193,7 @@ export function MiddlePanel({
         
         {/* Navigation Action Buttons (Aligned like KakaoTalk header) */}
         <div className="flex items-center space-x-2">
-          {activeTab === 'friends' && (
+          {activeTab === 'members' && (
             <>
               {/* Search Toggle Icon */}
               <button
@@ -207,11 +207,11 @@ export function MiddlePanel({
               >
                 <Search size={15} />
               </button>
-              {/* Add Friend Icon */}
+              {/* Add Member Icon */}
               <button
-                onClick={() => setIsAddFriendOpen(true)}
+                onClick={() => setIsAddMemberOpen(true)}
                 className="p-1.5 rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-355 hover:bg-slate-300/60 dark:hover:bg-zinc-700/50 transition-colors"
-                title="친구 추가"
+                title="멤버 추가"
               >
                 <UserPlus size={15} />
               </button>
@@ -255,13 +255,13 @@ export function MiddlePanel({
       </div>
 
       {/* Global Search box (only for friends/chats and when isSearchOpen is true) */}
-      {(activeTab === 'friends' || activeTab === 'chats') && isSearchOpen && (
+      {(activeTab === 'members' || activeTab === 'chats') && isSearchOpen && (
         <div className="px-5 py-2.5 shrink-0 bg-slate-100 dark:bg-zinc-955 transition-all duration-200">
           <div className="relative flex items-center">
             <Search className="absolute left-3 text-slate-400" size={14} />
             <input
               type="text"
-              placeholder={activeTab === 'friends' ? '이름 또는 아이디 검색' : '대화방 또는 참가자 검색'}
+              placeholder={activeTab === 'members' ? '이름 또는 아이디 검색' : '대화방 또는 참가자 검색'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-1.5 text-[11px] rounded-lg border border-slate-250 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-200 placeholder-slate-405 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-750 transition-all"
@@ -273,8 +273,8 @@ export function MiddlePanel({
 
       {/* Scrollable Sub Tabs Panels */}
       <div className="flex-1 overflow-y-auto px-4 py-2">
-        {activeTab === 'friends' && (
-          <FriendsTab
+        {activeTab === 'members' && (
+          <MembersTab
             searchQuery={searchQuery}
             setActiveTab={setActiveTab}
           />
@@ -354,9 +354,9 @@ export function MiddlePanel({
           setActiveTab('chats')
         }}
       />
-      <AddFriendModal
-        open={isAddFriendOpen}
-        onOpenChange={setIsAddFriendOpen}
+      <AddMemberModal
+        open={isAddMemberOpen}
+        onOpenChange={setIsAddMemberOpen}
       />
       <FolderManageModal
         open={isFolderModalOpen}

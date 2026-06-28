@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Sidebar } from './Sidebar'
 import { MiddlePanel } from './MiddlePanel'
 import { ChatArea } from '../../features/chat/ChatArea'
-import { SettingsDetail } from '../../features/friend/SettingsDetail'
-import { MoreDetail } from '../../features/friend/MoreDetail'
+import { SettingsDetail } from '../../features/member/SettingsDetail'
+import { MoreDetail } from '../../features/member/MoreDetail'
 import { LockScreen } from '../ui/LockScreen'
 import { ConfirmModal } from '../modal/ConfirmModal'
 import { useChatStore } from '../../store/useChatStore'
@@ -19,7 +19,7 @@ type MoreAppType = 'profile' | 'style' | 'security' | 'info' | 'notifications'
 
 export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
   const { currentUser, logout } = useChatStore()
-  const [activeTab, setActiveTab] = useState<'friends' | 'chats' | 'settings' | 'more' | 'workspaces'>('chats')
+  const [activeTab, setActiveTab] = useState<'members' | 'chats' | 'settings' | 'more' | 'workspaces'>('chats')
   const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<SubTabType>('general')
   const [activeMoreApp, setActiveMoreApp] = useState<MoreAppType>('profile')
   const [searchQuery, setSearchQuery] = useState('')

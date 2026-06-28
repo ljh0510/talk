@@ -11,7 +11,7 @@ export default function App() {
     switchWorkspace, 
     logout, 
     fetchChatRooms, 
-    fetchFriends, 
+    fetchMembers, 
     fetchUsers, 
     setupWebSocket 
   } = useChatStore()
@@ -22,10 +22,10 @@ export default function App() {
     if (currentUser) {
       setupWebSocket()
       fetchChatRooms()
-      fetchFriends()
+      fetchMembers()
       fetchUsers()
     }
-  }, [currentUser, fetchChatRooms, fetchFriends, fetchUsers, setupWebSocket])
+  }, [currentUser, fetchChatRooms, fetchMembers, fetchUsers, setupWebSocket])
 
   // Dark Mode Toggle
   useEffect(() => {

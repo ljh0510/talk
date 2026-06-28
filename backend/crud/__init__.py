@@ -3,8 +3,8 @@ from crud.user import (
     get_user_by_email,
     create_user,
     get_users_list,
-    get_friends_list,
-    add_friend,
+    get_member_relations_list,
+    add_member_relation,
     update_user_profile,
     get_user_by_id
 )

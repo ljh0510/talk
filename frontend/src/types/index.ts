@@ -67,9 +67,9 @@ export interface User {
   duty_sort_order?: number
 }
 
-export interface Friendship {
-  friend_id: number
-  friend: User
+export interface MemberRelation {
+  member_id: number
+  member: User
 }
 
 export interface Message {
