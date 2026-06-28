@@ -238,8 +238,15 @@ async def get_users_list(db: AsyncSession, exclude_user_id: int):
         )
         .where(models.User.id != exclude_user_id)
     )
-    users = result.scalars().all()
-    users.sort(key=lambda u: u.nickname or u.username)
+    users = result.scalars().unique().all()
+    
+    def get_user_sort_key(u):
+        rep = next((m for m in u.workspace_memberships if m.is_representative), None)
+        if not rep and u.workspace_memberships:
+            rep = u.workspace_memberships[0]
+        return rep.nickname if rep else u.username
+        
+    users.sort(key=get_user_sort_key)
     return users
 
 
@@ -264,7 +271,7 @@ async def get_friends_list(db: AsyncSession, user_id: int, workspace_id: int):
             )
         )
     )
-    return result.scalars().all()
+    return result.scalars().unique().all()
 
 
 async def add_friend(db: AsyncSession, user_id: int, friend_email: str, workspace_id: int):

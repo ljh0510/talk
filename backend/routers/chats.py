@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from core.database import get_db
 from core.dependencies import get_current_user
-from models import User, ChatRoom, ChatRoomMember, Message
+from models import User, ChatRoom, ChatRoomMember, Message, WorkspaceMember, DepartmentMember, Department
 from services.websocket import manager
 from schemas import (
     ChatRoomCreate, ChatRoomDetailResponse, ChatRoomListResponse,
@@ -167,7 +167,18 @@ async def list_rooms(
                 ChatRoom.workspace_id == target_ws_id
             )
         )
-        .options(selectinload(ChatRoom.room_members).selectinload(ChatRoomMember.user))
+        .options(
+            selectinload(ChatRoom.room_members)
+            .selectinload(ChatRoomMember.user)
+            .options(
+                selectinload(User.workspace_memberships).selectinload(WorkspaceMember.workspace),
+                selectinload(User.department_memberships).options(
+                    selectinload(DepartmentMember.department).selectinload(Department.manager),
+                    selectinload(DepartmentMember.position),
+                    selectinload(DepartmentMember.duty)
+                )
+            )
+        )
     )
     
     result = await db.execute(query)
@@ -180,7 +191,16 @@ async def list_rooms(
             select(Message)
             .filter(Message.room_id == room.id)
             .order_by(Message.created_at.desc())
-            .options(selectinload(Message.sender))
+            .options(
+                selectinload(Message.sender).options(
+                    selectinload(User.workspace_memberships).selectinload(WorkspaceMember.workspace),
+                    selectinload(User.department_memberships).options(
+                        selectinload(DepartmentMember.department).selectinload(Department.manager),
+                        selectinload(DepartmentMember.position),
+                        selectinload(DepartmentMember.duty)
+                    )
+                )
+            )
             .limit(1)
         )
         msg_result = await db.execute(msg_query)
@@ -243,7 +263,18 @@ async def get_room_detail(
     q = (
         select(ChatRoom)
         .filter(ChatRoom.id == room_id)
-        .options(selectinload(ChatRoom.room_members).selectinload(ChatRoomMember.user))
+        .options(
+            selectinload(ChatRoom.room_members)
+            .selectinload(ChatRoomMember.user)
+            .options(
+                selectinload(User.workspace_memberships).selectinload(WorkspaceMember.workspace),
+                selectinload(User.department_memberships).options(
+                    selectinload(DepartmentMember.department).selectinload(Department.manager),
+                    selectinload(DepartmentMember.position),
+                    selectinload(DepartmentMember.duty)
+                )
+            )
+        )
     )
     res = await db.execute(q)
     room = res.scalars().first()
@@ -257,7 +288,16 @@ async def get_room_detail(
         select(Message)
         .filter(Message.room_id == room_id)
         .order_by(Message.created_at.asc())
-        .options(selectinload(Message.sender))
+        .options(
+            selectinload(Message.sender).options(
+                selectinload(User.workspace_memberships).selectinload(WorkspaceMember.workspace),
+                selectinload(User.department_memberships).options(
+                    selectinload(DepartmentMember.department).selectinload(Department.manager),
+                    selectinload(DepartmentMember.position),
+                    selectinload(DepartmentMember.duty)
+                )
+            )
+        )
     )
     msg_res = await db.execute(msg_query)
     messages = msg_res.scalars().all()

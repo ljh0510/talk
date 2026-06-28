@@ -19,7 +19,7 @@ type MoreAppType = 'profile' | 'style' | 'security' | 'info' | 'notifications'
 
 export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
   const { currentUser, logout } = useChatStore()
-  const [activeTab, setActiveTab] = useState<'friends' | 'chats' | 'settings' | 'more'>('chats')
+  const [activeTab, setActiveTab] = useState<'friends' | 'chats' | 'settings' | 'more' | 'workspaces'>('chats')
   const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<SubTabType>('general')
   const [activeMoreApp, setActiveMoreApp] = useState<MoreAppType>('profile')
   const [searchQuery, setSearchQuery] = useState('')

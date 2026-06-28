@@ -10,7 +10,7 @@ import { FolderManageModal } from '../modal/FolderManageModal'
 import type { ChatFolder } from '../modal/FolderManageModal'
 import { useChatStore } from '../../store/useChatStore'
 
-type TabType = 'friends' | 'chats' | 'settings' | 'more'
+type TabType = 'friends' | 'chats' | 'settings' | 'more' | 'workspaces'
 type SubTabType = 'general' | 'style' | 'security'
 type MoreAppType = 'profile' | 'style' | 'security' | 'info' | 'notifications'
 
@@ -43,7 +43,7 @@ export function MiddlePanel({
   onTriggerLock,
   triggerToast
 }: MiddlePanelProps) {
-  const { chatRooms, markAsRead, setActiveRoomId } = useChatStore()
+  const { chatRooms, markAsRead, setActiveRoomId, currentUser, activeWorkspaceId, switchWorkspace } = useChatStore()
 
   // Local Modal visibility state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -69,6 +69,7 @@ export function MiddlePanel({
       case 'chats': return '채팅'
       case 'settings': return '설정'
       case 'more': return '더보기'
+      case 'workspaces': return '워크스페이스'
       default: return ''
     }
   }
@@ -240,7 +241,7 @@ export function MiddlePanel({
               </button>
             </>
           )}
-          {(activeTab === 'settings' || activeTab === 'more') && (
+          {(activeTab === 'settings' || activeTab === 'more' || activeTab === 'workspaces') && (
             <div className="flex items-center space-x-2 opacity-0 pointer-events-none select-none">
               <div className="p-1.5">
                 <Search size={15} />
@@ -296,6 +297,51 @@ export function MiddlePanel({
             setActiveMoreApp={setActiveMoreApp}
             triggerToast={triggerToast}
           />
+        )}
+        {activeTab === 'workspaces' && currentUser && (
+          <div className="space-y-2.5">
+            {currentUser.memberships?.map((m) => {
+              const isActive = m.workspace_id === activeWorkspaceId
+              return (
+                <button
+                  key={m.workspace_id}
+                  onClick={() => switchWorkspace(m.workspace_id)}
+                  className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all text-left cursor-pointer group ${
+                    isActive
+                      ? 'border-kakao-yellow/40 bg-white dark:bg-zinc-900 shadow-sm'
+                      : 'border-transparent bg-slate-50/50 dark:bg-zinc-950/20 hover:bg-slate-50 dark:hover:bg-zinc-900/40 hover:border-slate-200 dark:hover:border-zinc-800'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3 min-w-0">
+                    {m.workspace_logo ? (
+                      <img
+                        src={m.workspace_logo}
+                        alt={m.workspace_name}
+                        className="w-9 h-9 rounded-xl object-cover border border-slate-100 dark:border-zinc-800 shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-xl bg-kakao-yellow/20 dark:bg-yellow-500/10 flex items-center justify-center text-kakao-yellow dark:text-yellow-400 text-xs font-bold border border-kakao-yellow/30">
+                        {m.workspace_name.substring(0, 2)}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 truncate group-hover:text-kakao-yellow dark:group-hover:text-yellow-400 transition-colors">
+                        {m.workspace_name}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-semibold truncate mt-0.5">
+                        {m.nickname} · {m.department?.name ? `${m.department.name} ` : ''}{m.department?.position?.name || '멤버'}
+                      </p>
+                    </div>
+                  </div>
+                  {isActive && (
+                    <span className="flex-shrink-0 text-kakao-yellow dark:text-yellow-400 bg-kakao-yellow/10 dark:bg-yellow-500/10 p-1 rounded-lg">
+                      <Check size={14} strokeWidth={2.5} />
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
         )}
       </div>
 

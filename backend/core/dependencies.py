@@ -1,4 +1,5 @@
-from fastapi import Depends, HTTPException, status
+from typing import Optional
+from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -9,6 +10,7 @@ from core.security import verify_token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 async def get_current_user(
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-ID"),
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db)
 ) -> User:
@@ -34,9 +36,38 @@ async def get_current_user(
     except ValueError:
         raise credentials_exception
         
-    result = await db.execute(select(User).filter(User.id == user_id))
-    user = result.scalars().first()
+    # Fetch with eager load relations (workspace_memberships) so we can validate workspace list
+    # Use join query or get_user_by_id logic or just selectinload memberships
+    import crud
+    user = await crud.get_user_by_id(db, user_id)
     if user is None:
         raise credentials_exception
+        
+    # If client requested specific workspace via X-Workspace-ID header
+    if x_workspace_id:
+        try:
+            target_ws_id = int(x_workspace_id)
+            # Verify if user belongs to this workspace
+            is_valid_membership = any(m.workspace_id == target_ws_id for m in user.workspace_memberships)
+            if is_valid_membership:
+                user.workspace_id = target_ws_id
+            else:
+                # Default to representative or first membership
+                rep = next((m for m in user.workspace_memberships if m.is_representative), None)
+                if not rep and user.workspace_memberships:
+                    rep = user.workspace_memberships[0]
+                user.workspace_id = rep.workspace_id if rep else None
+        except ValueError:
+            # Safe fallback
+            rep = next((m for m in user.workspace_memberships if m.is_representative), None)
+            if not rep and user.workspace_memberships:
+                rep = user.workspace_memberships[0]
+            user.workspace_id = rep.workspace_id if rep else None
+    else:
+        # Default fallback if header not provided
+        rep = next((m for m in user.workspace_memberships if m.is_representative), None)
+        if not rep and user.workspace_memberships:
+            rep = user.workspace_memberships[0]
+        user.workspace_id = rep.workspace_id if rep else None
         
     return user

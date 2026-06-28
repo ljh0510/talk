@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useChatStore } from './store/useChatStore'
 import { AuthCard } from './features/auth/AuthCard'
+import { WorkspaceSelectCard } from './features/auth/WorkspaceSelectCard'
 import { MainLayout } from './components/layout/MainLayout'
 
 export default function App() {
-  const { currentUser, fetchChatRooms, fetchFriends, fetchUsers, setupWebSocket } = useChatStore()
+  const { 
+    currentUser, 
+    activeWorkspaceId, 
+    switchWorkspace, 
+    logout, 
+    fetchChatRooms, 
+    fetchFriends, 
+    fetchUsers, 
+    setupWebSocket 
+  } = useChatStore()
   const [darkMode, setDarkMode] = useState(false)
 
   // Fetch initial data on login / reload
@@ -70,6 +80,18 @@ function getHoverColor(hex: string): string {
 
   if (!currentUser) {
     return <AuthCard darkMode={darkMode} setDarkMode={setDarkMode} />
+  }
+
+  if (activeWorkspaceId === null) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-200 ${darkMode ? 'bg-zinc-950' : 'bg-slate-100'}`}>
+        <WorkspaceSelectCard 
+          memberships={currentUser.memberships}
+          onSelect={switchWorkspace}
+          onBack={logout}
+        />
+      </div>
+    )
   }
 
   return <MainLayout darkMode={darkMode} setDarkMode={setDarkMode} />

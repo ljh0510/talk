@@ -45,6 +45,7 @@ export function normalizeFriend(f: any): Friendship {
 interface ChatStore {
   currentUser: User | null
   accessToken: string | null
+  activeWorkspaceId: number | null
   users: User[]
   friends: Friendship[]
   chatRooms: ChatRoom[]
@@ -58,6 +59,7 @@ interface ChatStore {
   login: (email: string, password: string) => Promise<boolean>
   register: (username: string, email: string, password: string, nickname: string) => Promise<boolean>
   logout: () => void
+  switchWorkspace: (workspaceId: number) => Promise<void>
 
   // Users action
   fetchUsers: () => Promise<void>
@@ -89,6 +91,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   })(),
   accessToken: localStorage.getItem('accessToken'),
+  activeWorkspaceId: (() => {
+    const wsId = localStorage.getItem('activeWorkspaceId')
+    if (wsId) return Number(wsId)
+    const user = localStorage.getItem('currentUser')
+    try {
+      return user ? (JSON.parse(user).active_membership?.workspace_id || null) : null
+    } catch {
+      return null
+    }
+  })(),
   users: [],
   friends: [],
   chatRooms: [],
@@ -120,20 +132,51 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         throw new Error(errData.detail || 'Login failed')
       }
       const data = await response.json()
+      const memberships = data.user.memberships || []
+      
+      let wsIdToSet: number | null = null
+      
+      if (memberships.length === 1) {
+        wsIdToSet = memberships[0].workspace_id
+      } else if (memberships.length > 1) {
+        // If multiple workspaces, check if there is a previously saved selection
+        const savedWsId = localStorage.getItem('activeWorkspaceId')
+        if (savedWsId) {
+          const parsed = Number(savedWsId)
+          if (memberships.some((m: any) => m.workspace_id === parsed)) {
+            wsIdToSet = parsed
+          }
+        }
+        // If no valid saved selection, wsIdToSet remains null to trigger selection page
+      }
+      
       localStorage.setItem('accessToken', data.access_token)
       localStorage.setItem('currentUser', JSON.stringify(data.user)) // store raw
       
-      const normalizedUser = normalizeUser(data.user)
+      if (wsIdToSet) {
+        localStorage.setItem('activeWorkspaceId', String(wsIdToSet))
+        // If workspace is active, set representative active_membership profile locally
+        const targetMember = data.user.memberships?.find((m: any) => m.workspace_id === wsIdToSet)
+        if (targetMember) {
+          data.user.active_membership = targetMember
+        }
+      } else {
+        localStorage.removeItem('activeWorkspaceId')
+      }
+
       set({ 
-        currentUser: normalizedUser, 
-        accessToken: data.access_token, 
+        currentUser: normalizeUser(data.user), 
+        accessToken: data.access_token,
+        activeWorkspaceId: wsIdToSet,
         isLoading: false 
       })
       
-      get().setupWebSocket()
-      get().fetchChatRooms()
-      get().fetchFriends()
-      get().fetchUsers()
+      if (wsIdToSet) {
+        get().setupWebSocket()
+        get().fetchChatRooms()
+        get().fetchFriends()
+        get().fetchUsers()
+      }
       
       return true
     } catch (err) {
@@ -175,9 +218,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
     localStorage.removeItem('accessToken')
     localStorage.removeItem('currentUser')
+    localStorage.removeItem('activeWorkspaceId')
     set({ 
       currentUser: null, 
       accessToken: null, 
+      activeWorkspaceId: null,
       chatRooms: [], 
       friends: [],
       users: [],
@@ -187,12 +232,54 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     })
   },
 
+  switchWorkspace: async (workspaceId) => {
+    const { currentUser } = get()
+    if (!currentUser) return
+    
+    // Update local state and storage
+    localStorage.setItem('activeWorkspaceId', String(workspaceId))
+    
+    // Find membership details to normalize current representative fields locally
+    const rawUserStr = localStorage.getItem('currentUser')
+    if (rawUserStr) {
+      try {
+        const rawUser = JSON.parse(rawUserStr)
+        const targetMember = rawUser.memberships?.find((m: any) => m.workspace_id === workspaceId)
+        if (targetMember) {
+          rawUser.active_membership = targetMember
+          set({ currentUser: normalizeUser(rawUser) })
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+
+    set({ 
+      activeWorkspaceId: workspaceId,
+      activeRoomId: null,
+      activeRoomDetail: null,
+      chatRooms: [],
+      friends: [],
+      users: []
+    })
+
+    // Reload workspace-isolated resources
+    await Promise.all([
+      get().fetchFriends(),
+      get().fetchChatRooms(),
+      get().fetchUsers()
+    ])
+  },
+
   fetchUsers: async () => {
-    const { accessToken } = get()
+    const { accessToken, activeWorkspaceId } = get()
     if (!accessToken) return
     try {
       const response = await fetch(`${API_BASE}/users`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
+        headers: { 
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Workspace-ID': activeWorkspaceId ? String(activeWorkspaceId) : ''
+        }
       })
       if (response.ok) {
         const users = await response.json()
@@ -204,11 +291,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   fetchFriends: async () => {
-    const { accessToken } = get()
+    const { accessToken, activeWorkspaceId } = get()
     if (!accessToken) return
     try {
       const response = await fetch(`${API_BASE}/friends`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
+        headers: { 
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Workspace-ID': activeWorkspaceId ? String(activeWorkspaceId) : ''
+        }
       })
       if (response.ok) {
         const friends = await response.json()
@@ -220,14 +310,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   addFriend: async (email) => {
-    const { accessToken } = get()
+    const { accessToken, activeWorkspaceId } = get()
     if (!accessToken) return { success: false, error: '로그인이 필요합니다.' }
     try {
       const response = await fetch(`${API_BASE}/friends`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}` 
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Workspace-ID': activeWorkspaceId ? String(activeWorkspaceId) : ''
         },
         body: JSON.stringify({ friend_email: email }),
       })
@@ -247,17 +338,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-
-
   updateMyProfile: async (nickname, statusMessage, profileImageUrl) => {
-    const { accessToken, currentUser } = get()
+    const { accessToken, currentUser, activeWorkspaceId } = get()
     if (!accessToken || !currentUser) return false
     try {
       const response = await fetch(`${API_BASE}/users/me`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}` 
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Workspace-ID': activeWorkspaceId ? String(activeWorkspaceId) : ''
         },
         body: JSON.stringify({ 
           nickname, 
@@ -279,11 +369,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   fetchChatRooms: async () => {
-    const { accessToken } = get()
+    const { accessToken, activeWorkspaceId } = get()
     if (!accessToken) return
     try {
       const response = await fetch(`${API_BASE}/rooms`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
+        headers: { 
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Workspace-ID': activeWorkspaceId ? String(activeWorkspaceId) : ''
+        }
       })
       if (response.ok) {
         const rooms = await response.json()
@@ -303,11 +396,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   fetchRoomDetail: async (roomId) => {
-    const { accessToken } = get()
+    const { accessToken, activeWorkspaceId } = get()
     if (!accessToken) return
     try {
       const response = await fetch(`${API_BASE}/rooms/${roomId}`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
+        headers: { 
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Workspace-ID': activeWorkspaceId ? String(activeWorkspaceId) : ''
+        }
       })
       if (response.ok) {
         const detail = await response.json()
@@ -331,14 +427,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   createChatRoom: async (name, memberIds) => {
-    const { accessToken } = get()
+    const { accessToken, activeWorkspaceId } = get()
     if (!accessToken) return null
     try {
       const response = await fetch(`${API_BASE}/rooms`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}` 
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Workspace-ID': activeWorkspaceId ? String(activeWorkspaceId) : ''
         },
         body: JSON.stringify({ name, member_ids: memberIds }),
       })
@@ -355,14 +452,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   sendMessage: async (roomId, content) => {
-    const { accessToken } = get()
+    const { accessToken, activeWorkspaceId } = get()
     if (!accessToken) return
     try {
       await fetch(`${API_BASE}/rooms/${roomId}/messages`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}` 
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Workspace-ID': activeWorkspaceId ? String(activeWorkspaceId) : ''
         },
         body: JSON.stringify({ content }),
       })
@@ -372,12 +470,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   markAsRead: async (roomId) => {
-    const { accessToken, chatRooms } = get()
+    const { accessToken, chatRooms, activeWorkspaceId } = get()
     if (!accessToken) return
     try {
       await fetch(`${API_BASE}/rooms/${roomId}/read`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${accessToken}` }
+        headers: { 
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Workspace-ID': activeWorkspaceId ? String(activeWorkspaceId) : ''
+        }
       })
       
       set({
