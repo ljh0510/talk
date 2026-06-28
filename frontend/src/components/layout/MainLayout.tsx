@@ -8,6 +8,8 @@ import { CreateRoomModal } from '../../features/chat/CreateRoomModal'
 import { AddFriendModal } from '../../features/friend/AddFriendModal'
 import { ProfileCardModal } from '../../features/friend/ProfileCardModal'
 import { ProfileEditModal } from '../../features/friend/ProfileEditModal'
+import { PreferencesModal } from '../../features/friend/PreferencesModal'
+import { LockScreen } from '../ui/LockScreen'
 import { Search, Plus, UserPlus } from 'lucide-react'
 import type { User } from '../../types'
 
@@ -27,6 +29,8 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
   const [selectedProfileUser, setSelectedProfileUser] = useState<User | null>(null)
   const [isProfileCardOpen, setIsProfileCardOpen] = useState(false)
   const [isMyProfileEditOpen, setIsMyProfileEditOpen] = useState(false)
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false)
+  const [isLocked, setIsLocked] = useState(false)
 
   if (!currentUser) return null
 
@@ -59,6 +63,8 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
         darkMode={darkMode} 
         setDarkMode={setDarkMode} 
         onOpenProfileEdit={() => setIsMyProfileEditOpen(true)}
+        onOpenPreferences={() => setIsPreferencesOpen(true)}
+        onLock={() => setIsLocked(true)}
       />
 
       {/* 2. Middle Panel: Scrollable Lists (Friends or Chats) */}
@@ -149,6 +155,13 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
         open={isMyProfileEditOpen} 
         onOpenChange={setIsMyProfileEditOpen} 
       />
+      <PreferencesModal 
+        open={isPreferencesOpen}
+        onOpenChange={setIsPreferencesOpen}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+      />
+      {isLocked && <LockScreen onUnlock={() => setIsLocked(false)} />}
     </div>
   )
 }
