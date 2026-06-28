@@ -151,8 +151,8 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
 
       {/* 2. Middle Panel: Scrollable Lists (Friends, Chats, Settings, or More) */}
       <div className="w-[320px] bg-slate-100 dark:bg-zinc-955 border-r border-slate-300 dark:border-zinc-800 flex flex-col h-full select-none shrink-0">
-        {/* Header */}
-        <div className="p-5 border-b border-slate-200 dark:border-zinc-800/80 flex items-center justify-between shrink-0">
+        {/* Header - Fixed 64px height to prevent vertical shifts */}
+        <div className="h-[64px] px-5 border-b border-slate-200 dark:border-zinc-800/80 flex items-center justify-between shrink-0">
           <h1 className="text-sm font-extrabold text-slate-800 dark:text-zinc-100">{getPanelTitle()}</h1>
           
           <div className="flex items-center space-x-2">
@@ -173,6 +173,11 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
               >
                 <Plus size={15} />
               </button>
+            )}
+            {(activeTab === 'settings' || activeTab === 'more') && (
+              <div className="p-1.5 opacity-0 pointer-events-none select-none">
+                <Plus size={15} />
+              </div>
             )}
           </div>
         </div>
