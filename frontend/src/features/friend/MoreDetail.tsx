@@ -1,9 +1,9 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import React, { useEffect, useState } from 'react'
 import { useChatStore } from '../../store/useChatStore'
-import { Sun, Moon, Bell, BellOff, Lock, Palette, HelpCircle, CheckCircle, Info } from 'lucide-react'
+import { Sun, Moon, Bell, BellOff, Lock, Palette, HelpCircle, CheckCircle, Info, User, Sparkles } from 'lucide-react'
 
-type SubTabType = 'general' | 'style' | 'security'
+type MoreAppType = 'profile' | 'style' | 'security' | 'info' | 'notifications'
 
 // Helper to check contrast and generate light/dark text color
 function getContrastColor(hex: string): string {
@@ -32,14 +32,15 @@ function getHoverColor(hex: string): string {
   return `#${rHex}${gHex}${bHex}`
 }
 
-interface SettingsDetailProps {
-  activeSubTab: SubTabType
+interface MoreDetailProps {
+  activeSubTab: MoreAppType
   darkMode: boolean
   setDarkMode: (dark: boolean) => void
+  triggerToast: (msg: string) => void
 }
 
-export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: SettingsDetailProps) {
-  const { currentUser } = useChatStore()
+export function MoreDetail({ activeSubTab, darkMode, setDarkMode, triggerToast }: MoreDetailProps) {
+  const { currentUser, updateMyProfile } = useChatStore()
 
   // General configurations
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
@@ -65,23 +66,11 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
     return localStorage.getItem('autoLockMinutes') || 'off'
   })
 
-  // Toast Alert states
-  const [toastText, setToastText] = useState('')
-  const [toastOpen, setToastOpen] = useState(false)
-
-  const triggerToast = (msg: string) => {
-    setToastText(msg)
-    setToastOpen(true)
-  }
-
-  // Auto-hide toast after 2.5 seconds
-  useEffect(() => {
-    if (!toastOpen) return
-    const timer = setTimeout(() => {
-      setToastOpen(false)
-    }, 2500)
-    return () => clearTimeout(timer)
-  }, [toastOpen])
+  // Profile Edit configurations
+  const [editNickname, setEditNickname] = useState('')
+  const [editStatusMessage, setEditStatusMessage] = useState('')
+  const [editProfileImageUrl, setEditProfileImageUrl] = useState('')
+  const [profileSaving, setProfileSaving] = useState(false)
 
   useEffect(() => {
     setNotificationsEnabled(localStorage.getItem('notificationsEnabled') !== 'false')
@@ -98,7 +87,13 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
     setNewPinInput('')
     setConfirmNewPinInput('')
     setPinChangeMessage({ text: '', isError: false })
-  }, [activeSubTab])
+
+    if (currentUser) {
+      setEditNickname(currentUser.nickname)
+      setEditStatusMessage(currentUser.status_message || '')
+      setEditProfileImageUrl(currentUser.profile_image_url || '')
+    }
+  }, [activeSubTab, currentUser])
 
   const handleToggleNotifications = () => {
     const newVal = !notificationsEnabled
@@ -160,6 +155,29 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
     setConfirmNewPinInput('')
   }
 
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (profileSaving) return
+    setProfileSaving(true)
+
+    try {
+      const success = await updateMyProfile(
+        editNickname,
+        editStatusMessage || undefined,
+        editProfileImageUrl || undefined
+      )
+      if (success) {
+        triggerToast('내 프로필이 성공적으로 변경되었습니다.')
+      } else {
+        triggerToast('프로필 변경 중 오류가 발생했습니다.')
+      }
+    } catch {
+      triggerToast('네트워크 오류가 발생했습니다.')
+    } finally {
+      setProfileSaving(false)
+    }
+  }
+
   if (!currentUser) return null
 
   const presetColors = [
@@ -174,21 +192,19 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
   ]
 
   return (
-    <div className="flex-1 bg-slate-50 dark:bg-zinc-950 flex flex-col h-full select-none overflow-y-auto relative">
+    <div className="flex-1 bg-slate-50 dark:bg-zinc-955 flex flex-col h-full select-none overflow-y-auto relative">
       
       {/* Flat Content Layout Container */}
       <div className="max-w-xl w-full mx-auto p-8 space-y-6">
 
-        {/* 1. GENERAL TAB PAGE */}
-        {activeSubTab === 'general' && (
+        {/* 1. PROFILE APP PAGE */}
+        {activeSubTab === 'profile' && (
           <div className="space-y-6">
-            {/* Minimal Header */}
             <div className="border-b border-slate-200 dark:border-zinc-800 pb-3 flex items-center space-x-2">
-              <Info size={16} className="text-slate-500" />
-              <h2 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200">일반 및 계정 설정</h2>
+              <User size={16} className="text-slate-500" />
+              <h2 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200">내 프로필 편집</h2>
             </div>
 
-            {/* Account Information Details */}
             <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/50 dark:border-zinc-800/80 flex items-center space-x-4">
               <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-400 dark:bg-zinc-855 flex items-center justify-center text-white text-sm font-bold shadow shrink-0">
                 {currentUser.profile_image_url ? (
@@ -204,43 +220,64 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
               </div>
             </div>
 
-            {/* Desktop Notification Switch */}
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/50 dark:border-zinc-800/80 shadow-sm">
-              <div className="flex items-center space-x-3">
-                {notificationsEnabled ? (
-                  <Bell size={18} className="text-slate-600 dark:text-zinc-300" />
-                ) : (
-                  <BellOff size={18} className="text-red-500" />
-                )}
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-700 dark:text-zinc-200">데스크톱 알림</span>
-                  <span className="text-[9px] text-slate-400 mt-0.5">실시간 메시지 수신 시 알림 허용</span>
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200/50 dark:border-zinc-800/80 shadow-sm">
+              <form onSubmit={handleProfileSubmit} className="space-y-4">
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">닉네임</label>
+                    <input
+                      type="text"
+                      required
+                      value={editNickname}
+                      onChange={(e) => setEditNickname(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">상태 메시지</label>
+                    <input
+                      type="text"
+                      placeholder="상태메시지를 남겨보세요"
+                      value={editStatusMessage}
+                      onChange={(e) => setEditStatusMessage(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">프로필 이미지 URL</label>
+                    <input
+                      type="text"
+                      placeholder="이미지 절대 주소"
+                      value={editProfileImageUrl}
+                      onChange={(e) => setEditProfileImageUrl(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
+                    />
+                  </div>
                 </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleToggleNotifications}
-                className={`w-11 h-6 rounded-full p-0.5 transition-colors focus:outline-none shrink-0 ${
-                  notificationsEnabled ? 'bg-primary-accent' : 'bg-slate-200 dark:bg-zinc-800'
-                }`}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${
-                    notificationsEnabled ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="submit"
+                    disabled={profileSaving}
+                    className="px-5 py-2 rounded-xl bg-primary-accent hover:bg-primary-accent-hover text-primary-accent-text font-bold text-xs shadow flex items-center justify-center space-x-1.5 transition-colors border border-transparent disabled:opacity-50"
+                  >
+                    <CheckCircle size={13} />
+                    <span>{profileSaving ? '저장 중...' : '프로필 저장'}</span>
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
 
-        {/* 2. STYLE TAB PAGE */}
+        {/* 2. STYLE APP PAGE */}
         {activeSubTab === 'style' && (
           <div className="space-y-6">
-            {/* Minimal Header */}
             <div className="border-b border-slate-200 dark:border-zinc-800 pb-3 flex items-center space-x-2">
               <Palette size={16} className="text-slate-500" />
-              <h2 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200">스타일 및 테마 설정</h2>
+              <h2 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200">스타일 및 테마 테마</h2>
             </div>
 
             {/* Theme Switch Row */}
@@ -294,7 +331,7 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
               </div>
 
               {/* Custom Color Picker Tool */}
-              <div className="border-t border-slate-100 dark:border-zinc-850 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="border-t border-slate-100 dark:border-zinc-855 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex flex-col">
                   <span className="text-[10px] font-bold text-slate-600 dark:text-zinc-300">나만의 컬러 커스텀</span>
                   <span className="text-[8px] text-slate-450 mt-0.5">원하는 커스텀 색상을 컬러피커 또는 헥사코드로 입력하세요.</span>
@@ -325,7 +362,7 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
                       }
                     }}
                     placeholder="#ffffff"
-                    className="w-20 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-955 text-slate-800 dark:text-zinc-200 text-[10px] font-mono focus:outline-none"
+                    className="w-20 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-200 text-[10px] font-mono focus:outline-none"
                   />
                 </div>
               </div>
@@ -333,10 +370,9 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
           </div>
         )}
 
-        {/* 3. SECURITY TAB PAGE */}
+        {/* 3. SECURITY APP PAGE */}
         {activeSubTab === 'security' && (
           <div className="space-y-6">
-            {/* Minimal Header */}
             <div className="border-b border-slate-200 dark:border-zinc-800 pb-3 flex items-center space-x-2">
               <Lock size={16} className="text-slate-500" />
               <h2 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200">화면 잠금 및 보안 설정</h2>
@@ -440,15 +476,81 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
           </div>
         )}
 
-      </div>
+        {/* 4. NOTIFICATIONS APP PAGE */}
+        {activeSubTab === 'notifications' && (
+          <div className="space-y-6">
+            <div className="border-b border-slate-200 dark:border-zinc-800 pb-3 flex items-center space-x-2">
+              <Bell size={16} className="text-slate-500" />
+              <h2 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200">데스크톱 알림 수신 설정</h2>
+            </div>
 
-      {/* Floating In-App Toast Alert Feedback */}
-      {toastOpen && (
-        <div className="fixed bottom-6 right-6 bg-slate-900/90 dark:bg-zinc-900/95 backdrop-blur text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-2xl border border-slate-700/50 dark:border-zinc-800/80 flex items-center space-x-2 animate-bounce-in z-50">
-          <CheckCircle size={14} className="text-kakao-yellow dark:text-yellow-400" />
-          <span>{toastText}</span>
-        </div>
-      )}
+            <div className="flex items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/50 dark:border-zinc-800/80 shadow-sm">
+              <div className="flex items-center space-x-3">
+                {notificationsEnabled ? (
+                  <Bell size={18} className="text-slate-600 dark:text-zinc-300" />
+                ) : (
+                  <BellOff size={18} className="text-red-500" />
+                )}
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-700 dark:text-zinc-200">푸시 메시지 알림 활성화</span>
+                  <span className="text-[9px] text-slate-400 mt-0.5">새로운 메시지 수신 시 알림음 및 팝업 켜기</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleToggleNotifications}
+                className={`w-11 h-6 rounded-full p-0.5 transition-colors focus:outline-none shrink-0 ${
+                  notificationsEnabled ? 'bg-primary-accent' : 'bg-slate-200 dark:bg-zinc-800'
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${
+                    notificationsEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 5. INFO APP PAGE */}
+        {activeSubTab === 'info' && (
+          <div className="space-y-6">
+            <div className="border-b border-slate-200 dark:border-zinc-800 pb-3 flex items-center space-x-2">
+              <Info size={16} className="text-slate-500" />
+              <h2 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200">KokoaTalk Enterprise 정보</h2>
+            </div>
+
+            <div className="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/50 dark:border-zinc-800/80 shadow-sm space-y-4">
+              <div className="flex items-start space-x-3">
+                <Sparkles size={20} className="text-amber-500 mt-0.5 shrink-0" />
+                <div className="space-y-1.5">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200">KokoaTalk Enterprise v1.2.0 (Stable)</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-relaxed">
+                    본 애플리케이션은 최첨단 비동기 웹 프레임워크인 FastAPI 백엔드와 Vite + React + Radix UI 시스템으로 아키텍처링된 차세대 기업형 메신저입니다. 모든 데이터 통신 및 실시간 상태 공유는 보안 인증 웹소켓 채널로 동기화됩니다.
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 dark:border-zinc-850 pt-3 flex flex-col space-y-2">
+                <div className="flex justify-between text-[10px]">
+                  <span className="font-bold text-slate-400">개발 엔진</span>
+                  <span className="font-semibold text-slate-600 dark:text-zinc-300">FastAPI, SQLAlchemy, Uvicorn</span>
+                </div>
+                <div className="flex justify-between text-[10px]">
+                  <span className="font-bold text-slate-400">화면 라이브러기</span>
+                  <span className="font-semibold text-slate-600 dark:text-zinc-300">React, Zustand, Tailwind CSS v4</span>
+                </div>
+                <div className="flex justify-between text-[10px]">
+                  <span className="font-bold text-slate-400">보안 등급</span>
+                  <span className="font-semibold text-slate-600 dark:text-zinc-300">AES-255 인증 / 실패 자동 락아웃 30s</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   )
 }

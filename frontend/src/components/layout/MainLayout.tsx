@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react'
-import { useChatStore } from '../../store/useChatStore'
 import { Sidebar } from './Sidebar'
 import { FriendsTab } from '../../features/friend/FriendsTab'
 import { ChatsTab } from '../../features/chat/ChatsTab'
 import { SettingsTab } from '../../features/friend/SettingsTab'
-import { SettingsDetail } from '../../features/friend/SettingsDetail'
+import { MoreTab } from '../../features/friend/MoreTab'
 import { ChatArea } from '../../features/chat/ChatArea'
+import { SettingsDetail } from '../../features/friend/SettingsDetail'
+import { MoreDetail } from '../../features/friend/MoreDetail'
 import { CreateRoomModal } from '../../features/chat/CreateRoomModal'
 import { AddFriendModal } from '../../features/friend/AddFriendModal'
 import { ProfileCardModal } from '../../features/friend/ProfileCardModal'
 import { ProfileEditModal } from '../../features/friend/ProfileEditModal'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/Dialog'
 import { LockScreen } from '../ui/LockScreen'
-import { Search, Plus, UserPlus, LogOut, XSquare } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/Dialog'
+import { useChatStore } from '../../store/useChatStore'
+import { Search, Plus, UserPlus, LogOut, XSquare, CheckCircle } from 'lucide-react'
 import type { User } from '../../types'
 
 interface MainLayoutProps {
@@ -21,11 +23,13 @@ interface MainLayoutProps {
 }
 
 type SubTabType = 'general' | 'style' | 'security'
+type MoreAppType = 'profile' | 'style' | 'security' | 'info' | 'notifications'
 
 export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
   const { currentUser, chatRooms, setActiveRoomId, createChatRoom, logout } = useChatStore()
-  const [activeTab, setActiveTab] = useState<'friends' | 'chats' | 'settings'>('chats')
+  const [activeTab, setActiveTab] = useState<'friends' | 'chats' | 'settings' | 'more'>('chats')
   const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<SubTabType>('general')
+  const [activeMoreApp, setActiveMoreApp] = useState<MoreAppType>('profile')
   const [searchQuery, setSearchQuery] = useState('')
 
   // Modals visibility state
@@ -35,6 +39,28 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
   const [isProfileCardOpen, setIsProfileCardOpen] = useState(false)
   const [isMyProfileEditOpen, setIsMyProfileEditOpen] = useState(false)
   const [isLocked, setIsLocked] = useState(false)
+
+  // Global Confirmation states
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false)
+  const [confirmType, setConfirmType] = useState<'logout' | 'exit'>('logout')
+
+  // Toast Alert states
+  const [toastText, setToastText] = useState('')
+  const [toastOpen, setToastOpen] = useState(false)
+
+  const triggerToast = (msg: string) => {
+    setToastText(msg)
+    setToastOpen(true)
+  }
+
+  // Auto-hide toast after 2.5 seconds
+  useEffect(() => {
+    if (!toastOpen) return
+    const timer = setTimeout(() => {
+      setToastOpen(false)
+    }, 2500)
+    return () => clearTimeout(timer)
+  }, [toastOpen])
 
   // Auto-Lock Idle Detection
   useEffect(() => {
@@ -59,45 +85,27 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
       }, minutes * 60 * 1000)
     }
 
-    resetIdleTimer()
+    const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'click']
+    events.forEach(evt => window.addEventListener(evt, resetIdleTimer))
 
-    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'click']
-    events.forEach(event => {
-      window.addEventListener(event, resetIdleTimer)
-    })
+    resetIdleTimer()
 
     return () => {
       if (idleTimeout) window.clearTimeout(idleTimeout)
-      events.forEach(event => {
-        window.removeEventListener(event, resetIdleTimer)
-      })
+      events.forEach(evt => window.removeEventListener(evt, resetIdleTimer))
     }
   }, [isLocked])
 
-  // Confirmation Modals (Logout & Exit)
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false)
-  const [confirmType, setConfirmType] = useState<'logout' | 'exit'>('logout')
-
-  if (!currentUser) return null
-
-  // Handle starting/joining 1:1 chat
-  const handleStartChat = async (targetUser: User) => {
+  const handleStartChat = async (user: User) => {
     setIsProfileCardOpen(false)
-    
-    const existingRoom = chatRooms.find(
-      room => !room.is_group && room.members.some(m => m.id === targetUser.id)
-    )
-
-    if (existingRoom) {
-      setActiveRoomId(existingRoom.id)
-      setActiveTab('chats')
+    const active = chatRooms.find(r => r.type === 'DIRECT' && r.members.some(m => m.user.id === user.id))
+    if (active) {
+      setActiveRoomId(active.id)
     } else {
-      const newRoomId = await createChatRoom(undefined, [targetUser.id])
-      if (newRoomId) {
-        setActiveRoomId(newRoomId)
-        setActiveTab('chats')
-      }
+      const newId = await createChatRoom([user.id], 'DIRECT')
+      if (newId) setActiveRoomId(newId)
     }
+    setActiveTab('chats')
   }
 
   const handleConfirmAction = () => {
@@ -106,8 +114,22 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
       logout()
     } else {
       logout()
-      window.close()
-      alert('프로그램이 완전히 종료되었습니다. 이 브라우저 탭을 안전하게 닫으셔도 좋습니다.')
+      setTimeout(() => {
+        window.close()
+      }, 300)
+    }
+  }
+
+  if (!currentUser) return null
+
+  // Middle Column panel titles
+  const getPanelTitle = () => {
+    switch (activeTab) {
+      case 'friends': return '친구'
+      case 'chats': return '채팅'
+      case 'settings': return '설정'
+      case 'more': return '더보기'
+      default: return ''
     }
   }
 
@@ -127,123 +149,131 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
         }}
       />
 
-      {/* 2. Middle Panel: Scrollable Lists (Friends, Chats, or Settings menu) */}
-      <div className="w-[320px] bg-slate-100 dark:bg-zinc-950 border-r border-slate-300 dark:border-zinc-800 flex flex-col h-full select-none shrink-0">
+      {/* 2. Middle Panel: Scrollable Lists (Friends, Chats, Settings, or More) */}
+      <div className="w-[320px] bg-slate-100 dark:bg-zinc-955 border-r border-slate-300 dark:border-zinc-800 flex flex-col h-full select-none shrink-0">
         {/* Header */}
-        <div className="p-5 pb-3">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-extrabold text-slate-800 dark:text-zinc-100 tracking-tight">
-              {activeTab === 'friends' && '친구'}
-              {activeTab === 'chats' && '채팅'}
-              {activeTab === 'settings' && '설정'}
-            </h2>
-            <div className="flex items-center space-x-1">
-              {activeTab === 'friends' && (
-                <button
-                  onClick={() => setIsAddFriendOpen(true)}
-                  className="p-1.5 rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-300/70 dark:hover:bg-zinc-700/70 transition-colors"
-                  title="친구 추가"
-                >
-                  <UserPlus size={16} />
-                </button>
-              )}
-              {activeTab === 'chats' && (
-                <button
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="p-1.5 rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-300/70 dark:hover:bg-zinc-700/70 transition-colors"
-                  title="새로운 채팅방 개설"
-                >
-                  <Plus size={16} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Search Box (Hide on settings tab) */}
-          {activeTab !== 'settings' && (
-            <div className="relative">
-              <Search className="absolute left-3 top-3 text-slate-400" size={16} />
-              <input
-                type="text"
-                placeholder={activeTab === 'friends' ? '이름 또는 아이디 검색' : '채팅방 검색'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Scrollable list content */}
-        <div className="flex-1 overflow-y-auto px-3">
-          <div className="space-y-1 pb-4 h-full">
+        <div className="p-5 border-b border-slate-200 dark:border-zinc-800/80 flex items-center justify-between shrink-0">
+          <h1 className="text-sm font-extrabold text-slate-800 dark:text-zinc-100">{getPanelTitle()}</h1>
+          
+          <div className="flex items-center space-x-2">
             {activeTab === 'friends' && (
-              <FriendsTab 
-                searchQuery={searchQuery} 
-                onOpenProfileEdit={() => setIsMyProfileEditOpen(true)}
-                onSelectProfileUser={(user) => {
-                  setSelectedProfileUser(user)
-                  setIsProfileCardOpen(true)
-                }}
-              />
+              <button
+                onClick={() => setIsAddFriendOpen(true)}
+                className="p-1.5 rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-350 hover:bg-slate-300/60 dark:hover:bg-zinc-700/50 transition-colors"
+                title="친구 추가"
+              >
+                <UserPlus size={15} />
+              </button>
             )}
             {activeTab === 'chats' && (
-              <ChatsTab searchQuery={searchQuery} />
-            )}
-            {activeTab === 'settings' && (
-              <SettingsTab
-                activeSubTab={activeSettingsSubTab}
-                setActiveSubTab={setActiveSettingsSubTab}
-                onTriggerLogout={() => {
-                  setConfirmType('logout')
-                  setConfirmModalOpen(true)
-                }}
-                onTriggerExit={() => {
-                  setConfirmType('exit')
-                  setConfirmModalOpen(true)
-                }}
-                onTriggerLock={() => setIsLocked(true)}
-              />
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="p-1.5 rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-350 hover:bg-slate-300/60 dark:hover:bg-zinc-700/50 transition-colors"
+                title="새로운 채팅방 생성"
+              >
+                <Plus size={15} />
+              </button>
             )}
           </div>
+        </div>
+
+        {/* Global Search box (only for friends/chats) */}
+        {(activeTab === 'friends' || activeTab === 'chats') && (
+          <div className="px-5 py-2.5 shrink-0 bg-slate-100 dark:bg-zinc-955 border-b border-slate-200/50 dark:border-zinc-800/40">
+            <div className="relative flex items-center">
+              <Search className="absolute left-3 text-slate-400" size={14} />
+              <input
+                type="text"
+                placeholder={activeTab === 'friends' ? '이름 또는 아이디 검색' : '대화방 또는 참가자 검색'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-1.5 text-[11px] rounded-lg border border-slate-250 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-750 transition-all"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Scrollable Sub Tabs Panels */}
+        <div className="flex-1 overflow-y-auto px-4 py-2">
+          {activeTab === 'friends' && (
+            <FriendsTab searchQuery={searchQuery} onOpenProfile={setSelectedProfileUser} onOpenProfileCard={setIsProfileCardOpen} />
+          )}
+          {activeTab === 'chats' && (
+            <ChatsTab searchQuery={searchQuery} />
+          )}
+          {activeTab === 'settings' && (
+            <SettingsTab
+              activeSubTab={activeSettingsSubTab}
+              setActiveSubTab={setActiveSettingsSubTab}
+              onTriggerLogout={() => {
+                setConfirmType('logout')
+                setConfirmModalOpen(true)
+              }}
+              onTriggerExit={() => {
+                setConfirmType('exit')
+                setConfirmModalOpen(true)
+              }}
+              onTriggerLock={() => setIsLocked(true)}
+            />
+          )}
+          {activeTab === 'more' && (
+            <MoreTab
+              activeMoreApp={activeMoreApp}
+              setActiveMoreApp={setActiveMoreApp}
+              triggerToast={triggerToast}
+            />
+          )}
         </div>
       </div>
 
-      {/* 3. Right Panel: Active Chat Room Window OR Settings Detail Page */}
-      {activeTab === 'settings' ? (
-        <SettingsDetail 
-          activeSubTab={activeSettingsSubTab}
-          darkMode={darkMode}
-          setDarkMode={setDarkMode}
-        />
-      ) : (
-        <ChatArea />
-      )}
+      {/* 3. Right Panel: Active Chat Room Window OR Settings Detail Page OR More Detail Page */}
+      {(() => {
+        if (activeTab === 'settings') {
+          return (
+            <SettingsDetail
+              activeSubTab={activeSettingsSubTab}
+              darkMode={darkMode}
+              setDarkMode={setDarkMode}
+            />
+          )
+        } else if (activeTab === 'more') {
+          return (
+            <MoreDetail
+              activeSubTab={activeMoreApp}
+              darkMode={darkMode}
+              setDarkMode={setDarkMode}
+              triggerToast={triggerToast}
+            />
+          )
+        } else {
+          return <ChatArea />
+        }
+      })()}
 
       {/* Modals */}
-      <CreateRoomModal 
-        open={isCreateModalOpen} 
-        onOpenChange={setIsCreateModalOpen} 
+      <CreateRoomModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
         onSuccess={(roomId) => {
           setActiveRoomId(roomId)
           setActiveTab('chats')
-        }} 
+        }}
       />
-      <AddFriendModal 
-        open={isAddFriendOpen} 
-        onOpenChange={setIsAddFriendOpen} 
+      <AddFriendModal
+        open={isAddFriendOpen}
+        onOpenChange={setIsAddFriendOpen}
       />
-      <ProfileCardModal 
-        open={isProfileCardOpen} 
-        onOpenChange={setIsProfileCardOpen} 
-        user={selectedProfileUser} 
-        onStartChat={handleStartChat} 
+      <ProfileCardModal
+        open={isProfileCardOpen}
+        onOpenChange={setIsProfileCardOpen}
+        user={selectedProfileUser}
+        onStartChat={handleStartChat}
       />
-      <ProfileEditModal 
-        open={isMyProfileEditOpen} 
-        onOpenChange={setIsMyProfileEditOpen} 
+      <ProfileEditModal
+        open={isMyProfileEditOpen}
+        onOpenChange={setIsMyProfileEditOpen}
       />
-      
+
       {isLocked && <LockScreen onUnlock={() => setIsLocked(false)} />}
 
       {/* Global Logout / Exit Confirmation Dialog */}
@@ -261,11 +291,11 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
 
           <div className="p-5 space-y-4 pt-2 text-center">
             <p className="text-xs text-slate-600 dark:text-zinc-300 font-medium whitespace-pre-line">
-              {confirmType === 'logout' 
-                ? '현재 계정에서 로그아웃하시겠습니까?' 
+              {confirmType === 'logout'
+                ? '현재 계정에서 로그아웃하시겠습니까?'
                 : '메신저를 종료하고 완전히 로그아웃하시겠습니까?\n종료 후에는 대화 알림을 받을 수 없습니다.'}
             </p>
-            
+
             <div className="flex space-x-2.5 pt-2">
               <button
                 onClick={() => setConfirmModalOpen(false)}
@@ -275,9 +305,8 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
               </button>
               <button
                 onClick={handleConfirmAction}
-                className={`flex-1 py-2.5 rounded-xl text-white font-bold text-xs transition-colors shadow-md ${
-                  confirmType === 'logout' ? 'bg-kakao-brown hover:bg-neutral-800' : 'bg-red-600 hover:bg-red-700'
-                }`}
+                className={`flex-1 py-2.5 rounded-xl text-white font-bold text-xs transition-colors shadow-md ${confirmType === 'logout' ? 'bg-kakao-brown hover:bg-neutral-800' : 'bg-red-600 hover:bg-red-700'
+                  }`}
               >
                 {confirmType === 'logout' ? '로그아웃' : '종료하기'}
               </button>
@@ -285,6 +314,14 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Floating In-App Toast Alert Feedback */}
+      {toastOpen && (
+        <div className="fixed bottom-6 right-6 bg-slate-900/90 dark:bg-zinc-900/95 backdrop-blur text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-2xl border border-slate-700/50 dark:border-zinc-800/80 flex items-center space-x-2 animate-bounce-in z-50">
+          <CheckCircle size={14} className="text-kakao-yellow dark:text-yellow-400" />
+          <span>{toastText}</span>
+        </div>
+      )}
     </div>
   )
 }

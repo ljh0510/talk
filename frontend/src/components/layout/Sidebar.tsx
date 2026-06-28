@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { useChatStore } from '../../store/useChatStore'
-import { Users, MessageCircle, Bell, BellOff, Settings, LogOut, XSquare } from 'lucide-react'
+import { Users, MessageCircle, Bell, BellOff, Settings, LogOut, XSquare, MoreHorizontal } from 'lucide-react'
 
 interface SidebarProps {
-  activeTab: 'friends' | 'chats' | 'settings'
-  setActiveTab: (tab: 'friends' | 'chats' | 'settings') => void
+  activeTab: 'friends' | 'chats' | 'settings' | 'more'
+  setActiveTab: (tab: 'friends' | 'chats' | 'settings' | 'more') => void
   onTriggerLogout: () => void
   onTriggerExit: () => void
 }
@@ -50,7 +50,7 @@ export function Sidebar({
     <div className="w-[72px] bg-slate-200 dark:bg-zinc-900 border-r border-slate-300 dark:border-zinc-800 flex flex-col items-center py-6 justify-between select-none shrink-0">
       <div className="flex flex-col items-center space-y-4 w-full">
 
-        {/* Friends List Tab Button */}
+        {/* 1. Friends List Tab Button */}
         <button
           onClick={() => setActiveTab('friends')}
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${
@@ -63,7 +63,7 @@ export function Sidebar({
           <Users size={24} fill={activeTab === 'friends' ? 'currentColor' : 'none'} />
         </button>
 
-        {/* Chat List Tab Button */}
+        {/* 2. Chat List Tab Button */}
         <button
           onClick={() => setActiveTab('chats')}
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${
@@ -81,7 +81,7 @@ export function Sidebar({
           )}
         </button>
 
-        {/* Settings Tab Button */}
+        {/* 3. Settings Tab Button */}
         <button
           onClick={() => setActiveTab('settings')}
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${
@@ -93,6 +93,19 @@ export function Sidebar({
         >
           <Settings size={24} />
         </button>
+
+        {/* 4. More Tab Button (Added under Settings Tab) */}
+        <button
+          onClick={() => setActiveTab('more')}
+          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${
+            activeTab === 'more'
+              ? 'bg-primary-accent text-primary-accent-text shadow'
+              : 'text-slate-500 hover:bg-slate-300/50 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-200'
+          }`}
+          title="더보기"
+        >
+          <MoreHorizontal size={24} />
+        </button>
       </div>
 
       {/* Bottom quick items */}
@@ -101,8 +114,8 @@ export function Sidebar({
         <button
           onClick={handleToggleNotifications}
           className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
-            notificationsEnabled 
-              ? 'text-slate-600 dark:text-zinc-300 hover:bg-slate-300/50 dark:hover:bg-zinc-800/40' 
+            notificationsEnabled
+              ? 'text-slate-600 dark:text-zinc-300 hover:bg-slate-300/50 dark:hover:bg-zinc-800/40'
               : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-955/20'
           }`}
           title={notificationsEnabled ? '알림 켜짐 (클릭하여 끄기)' : '알림 꺼짐 (클릭하여 켜기)'}

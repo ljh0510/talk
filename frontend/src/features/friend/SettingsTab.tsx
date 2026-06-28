@@ -18,7 +18,7 @@ export function SettingsTab({
   onTriggerLock
 }: SettingsTabProps) {
   const menuItems = [
-    { id: 'general', label: '일반 설정', description: '알림 및 프로필 요약', icon: Sliders },
+    { id: 'general', label: '일반 설정', description: '알림 및 계정 요약', icon: Sliders },
     { id: 'style', label: '스타일 설정', description: '다크모드 및 액센트 테마', icon: Palette },
     { id: 'security', label: '잠금/보안 설정', description: '비밀번호 암호 변경', icon: Lock },
   ] as const
@@ -85,7 +85,7 @@ export function SettingsTab({
 
         <button
           onClick={onTriggerExit}
-          className="w-full p-3 rounded-xl flex items-center space-x-3 hover:bg-red-50 dark:hover:bg-red-950/20 text-left transition-colors group"
+          className="w-full p-3 rounded-xl flex items-center space-x-3 hover:bg-red-50 dark:hover:bg-red-955/20 text-left transition-colors group"
         >
           <div className="p-2 rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-500 group-hover:bg-red-100 dark:group-hover:bg-red-900/20 group-hover:text-red-500 shrink-0">
             <XSquare size={16} />
