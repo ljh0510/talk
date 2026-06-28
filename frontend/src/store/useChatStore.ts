@@ -70,7 +70,7 @@ interface ChatStore {
   // Friends actions
   fetchMembers: () => Promise<void>
   addMemberRelation: (email: string) => Promise<{ success: boolean; error?: string }>
-  updateMyProfile: (nickname: string, statusMessage: string, profileImageUrl?: string) => Promise<boolean>
+  updateMyProfile: (nickname: string, statusMessage: string, profileImageUrl?: string, phoneNumber?: string, officePhone?: string) => Promise<boolean>
 
   // Rooms and Messages actions
   fetchChatRooms: () => Promise<void>
@@ -344,7 +344,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  updateMyProfile: async (nickname, statusMessage, profileImageUrl) => {
+  updateMyProfile: async (nickname, statusMessage, profileImageUrl, phoneNumber, officePhone) => {
     const { accessToken, currentUser, activeWorkspaceId } = get()
     if (!accessToken || !currentUser) return false
     try {
@@ -358,7 +358,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         body: JSON.stringify({ 
           nickname, 
           status_message: statusMessage,
-          profile_image_url: profileImageUrl 
+          profile_image_url: profileImageUrl,
+          phone_number: phoneNumber,
+          office_phone: officePhone
         }),
       })
       if (response.ok) {

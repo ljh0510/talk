@@ -50,6 +50,8 @@ def map_user_to_response(user: User) -> dict:
             "nickname": m.nickname,
             "profile_image_url": m.profile_image_url,
             "status_message": m.status_message,
+            "phone_number": m.phone_number,
+            "office_phone": m.office_phone,
             "is_representative": m.is_representative,
             "department": dept_data
         }
