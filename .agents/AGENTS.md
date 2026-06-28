@@ -22,24 +22,33 @@ talk/
 ├── .gitignore             # Git 관리 제외 설정 파일
 ├── README.md              # 프로젝트 리드미 (통합 지침서)
 ├── run.sh                 # 통합 타입 검수, DB 마이그레이션 및 동시 실행 스크립트
-├── backend/               # FastAPI 비동기 백엔드 모듈
+├── backend/               # FastAPI 비동기 백엔드 모듈 (app 폴더 제거 및 레이어링)
 │   ├── .env               # 환경 변수 설정 파일 (PostgreSQL 접속 URI 포함)
-│   ├── app/
-│   │   ├── database.py    # Async SQLAlchemy 엔진 설정 및 세션 팩토리
-│   │   ├── models.py      # SQLAlchemy 데이터 모델 (User, ChatRoom, ChatRoomMember, Message)
-│   │   ├── schemas.py     # Pydantic 요청/응답 스키마 정의
-│   │   ├── crud.py        # 데이터베이스 질의 및 비즈니스 쿼리 (Repository 패턴)
-│   │   └── main.py        # API 엔드포인트 라우터, CORS 관리 및 WebSocket 커넥션 매니저
+│   ├── core/              # 핵심 설정 및 공통 모듈 (설정, DB 세션, 보안, 의존성)
+│   ├── models/            # SQLAlchemy 데이터 모델 (도메인별 분할)
+│   ├── schemas/           # Pydantic 데이터 검증 스키마
+│   ├── crud/              # 데이터베이스 CRUD 리포지토리
+│   ├── services/          # 비즈니스 로직 및 실시간 관리 서비스 (Websocket 등)
+│   ├── routers/           # API 라우팅 엔드포인트
+│   ├── main.py            # API 진입점
 │   ├── requirements.txt   # 백엔드 의존성 라이브러리 목록
 │   └── seed.py            # 데이터베이스 스키마 생성 및 데모 데이터 시딩 스크립트
 └── frontend/              # Vite React 프론트엔드 모듈
     ├── src/
-    │   ├── components/
-    │   │   └── ui/
-    │   │       └── ScrollArea.tsx   # Radix UI ScrollArea 스크롤바 컴포넌트
+    │   ├── components/    # 재사용 및 레이아웃 컴포넌트
+    │   │   ├── ui/        # 원자적 공통 UI (ScrollArea, Dialog 등)
+    │   │   └── layout/    # 화면 구성 레이아웃 (MainLayout, Sidebar)
+    │   ├── features/      # 기능/도메인 중심 컴포넌트 분류 (Features)
+    │   │   ├── auth/      # 인증 관련 기능
+    │   │   ├── chat/      # 채팅 관련 기능
+    │   │   └── friend/    # 친구 및 프로필 관련 기능
     │   ├── store/
     │   │   └── useChatStore.ts      # Zustand 상태 관리 및 비동기 API/WebSocket 처리기
-    │   ├── App.tsx        # 메인 웹 UI 대시보드 컴포넌트
+    │   ├── types/
+    │   │   └── index.ts   # 공통 TypeScript 타입 선언
+    │   ├── utils/
+    │   │   └── time.ts    # 시간 포맷팅 헬퍼
+    │   ├── App.tsx        # 메인 라우터/엔트리 가드
     │   ├── index.css      # Tailwind CSS v4 스타일시트 (카카오 테마 추가)
     │   └── main.tsx       # React 진입 마운트 파일
     ├── postcss.config.js  # PostCSS 플러그인 설정
@@ -53,7 +62,7 @@ talk/
 ### 1) Backend (FastAPI, SQLAlchemy)
 - **비동기성(Asynchrony) 보장**: 모든 DB 쿼리 및 라우터는 비동기(`async/await`) 처리와 `AsyncSession` 의존성 주입을 필수로 활용해야 합니다.
 - **데이터베이스 이중화 전략**: 로컬 개발 시에는 SQLite(`aiosqlite`), 실운영 환경에서는 PostgreSQL을 교체 가능하도록 구조화해야 합니다. DB 종속적인 방언(Dialect)을 지양하고 표준 ANSI SQL과 SQLAlchemy ORM 빌더만을 사용하십시오.
-- **비즈니스 격리**: DB 테이블 모델 조작 로직은 `app/crud.py`에 격리하여 라우터(`app/main.py`)가 데이터베이스의 세부 명세에 결합되지 않도록 합니다.
+- **비즈니스 격리**: DB 테이블 모델 조작 로직은 `crud/` 패키지에 격리하여 라우터(`routers/`)가 데이터베이스의 세부 명세에 결합되지 않도록 합니다.
 - **CORS 설정 주의**: 브라우저 보안에 따라 `allow_credentials=True`인 경우 `allow_origins=["*"]`를 사용할 수 없습니다. 오리진 명세 시 `allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"]`와 같이 구체적인 호스트명을 사용하십시오.
 
 ### 2) Frontend (Vite, React, Radix UI, Tailwind CSS v4, Zustand)

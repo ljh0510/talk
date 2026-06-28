@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import jwt, JWTError
 import bcrypt
-from app.config import settings
+from core.config import settings
 
 def get_password_hash(password: str) -> str:
     pwd_bytes = password.encode('utf-8')

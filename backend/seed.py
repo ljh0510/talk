@@ -6,8 +6,10 @@ from datetime import datetime, timedelta
 # Add backend directory to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from app.database import Base, engine, AsyncSessionLocal
-from app import models, crud, schemas
+from core.database import Base, engine, AsyncSessionLocal
+import models
+import crud
+import schemas
 
 async def seed_data():
     print("Initializing Database Schemas...")

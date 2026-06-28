@@ -3,10 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from app.database import get_db
-from app.dependencies import get_current_user
-from app.models import User, Friendship
-from app.schemas import FriendResponse, FriendAdd, FriendUpdate
+from core.database import get_db
+from core.dependencies import get_current_user
+from models import User, Friendship
+from schemas import FriendResponse, FriendAdd, FriendUpdate
 
 router = APIRouter(prefix="/friends", tags=["friends"])
 
@@ -15,7 +15,6 @@ async def list_friends(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # Fetch friendships with friend details eager-loaded
     result = await db.execute(
         select(Friendship)
         .filter(Friendship.user_id == current_user.id)
@@ -23,7 +22,6 @@ async def list_friends(
     )
     friends = result.scalars().all()
     
-    # Map to schema FriendResponse
     response = []
     for f in friends:
         response.append({
@@ -46,7 +44,6 @@ async def add_friend(
             detail="You cannot add yourself as a friend"
         )
         
-    # Find user by username
     result = await db.execute(select(User).filter(User.username == friend_add.friend_username))
     friend_user = result.scalars().first()
     if not friend_user:
@@ -55,7 +52,6 @@ async def add_friend(
             detail="User not found"
         )
         
-    # Check if already friends
     check_result = await db.execute(
         select(Friendship).filter(
             Friendship.user_id == current_user.id,
@@ -69,7 +65,6 @@ async def add_friend(
             detail="You are already friends with this user"
         )
         
-    # Create friendship record
     new_friend = Friendship(
         user_id=current_user.id,
         friend_id=friend_user.id,
@@ -78,7 +73,6 @@ async def add_friend(
     db.add(new_friend)
     await db.flush()
     
-    # Reload with relationship
     query = select(Friendship).filter(
         Friendship.user_id == current_user.id,
         Friendship.friend_id == friend_user.id
@@ -103,7 +97,6 @@ async def update_friend(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # Find friendship
     result = await db.execute(
         select(Friendship)
         .filter(Friendship.user_id == current_user.id, Friendship.friend_id == friend_id)
@@ -116,7 +109,6 @@ async def update_friend(
             detail="Friendship not found"
         )
         
-    # Update status
     friendship.status = friend_update.status
     db.add(friendship)
     await db.commit()

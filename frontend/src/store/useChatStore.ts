@@ -2,56 +2,7 @@
 
 import { create } from 'zustand'
 
-export interface User {
-  id: number
-  username: string
-  nickname: string
-  profile_image_url?: string
-  status_message?: string
-  created_at: string
-}
-
-export interface Friendship {
-  friend_id: number
-  status: string
-  friend: User
-}
-
-export interface Message {
-  id: number
-  room_id: number
-  sender_id: number
-  sender: User
-  content: string
-  message_type: string
-  created_at: string
-}
-
-export interface ChatRoom {
-  id: number
-  name?: string
-  is_group: boolean
-  created_at: string
-  members: User[]
-  latest_message?: Message
-  unread_count: number
-}
-
-export interface ChatRoomMemberDetail {
-  user_id: number
-  user: User
-  joined_at: string
-  last_read_at: string
-}
-
-export interface ChatRoomDetail {
-  id: number
-  name?: string
-  is_group: boolean
-  created_at: string
-  members: ChatRoomMemberDetail[]
-  messages: Message[]
-}
+import type { User, Friendship, Message, ChatRoom, ChatRoomDetail } from '../types'
 
 interface ChatStore {
   currentUser: User | null
@@ -142,8 +93,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       get().fetchUsers()
       
       return true
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false })
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Login failed'
+      set({ error: errorMessage, isLoading: false })
       return false
     }
   },
@@ -162,8 +114,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }
       set({ isLoading: false })
       return true
-    } catch (err: any) {
-      set({ error: err.message, isLoading: false })
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed'
+      set({ error: errorMessage, isLoading: false })
       return false
     }
   },
@@ -236,8 +189,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         friends: [...state.friends, data]
       }))
       return { success: true }
-    } catch (err: any) {
-      return { success: false, error: err.message || '네트워크 오류가 발생했습니다.' }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '네트워크 오류가 발생했습니다.'
+      return { success: false, error: errorMessage }
     }
   },
 

@@ -2,10 +2,10 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.database import get_db
-from app.dependencies import get_current_user
-from app.models import User
-from app.schemas import UserResponse, UserUpdate
+from core.database import get_db
+from core.dependencies import get_current_user
+from models import User
+from schemas import UserResponse, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -38,7 +38,6 @@ async def list_all_users(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # Retrieve all users excluding self
     result = await db.execute(
         select(User).filter(User.id != current_user.id).order_by(User.nickname)
     )
