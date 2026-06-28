@@ -11,13 +11,13 @@ interface AddFriendModalProps {
 
 export function AddFriendModal({ open, onOpenChange }: AddFriendModalProps) {
   const { addFriend, fetchFriends } = useChatStore()
-  const [friendUsernameInput, setFriendUsernameInput] = useState('')
+  const [friendEmailInput, setFriendEmailInput] = useState('')
   const [addFriendError, setAddFriendError] = useState('')
   const [addFriendSuccess, setAddFriendSuccess] = useState('')
 
   useEffect(() => {
     if (!open) {
-      setFriendUsernameInput('')
+      setFriendEmailInput('')
       setAddFriendError('')
       setAddFriendSuccess('')
     }
@@ -27,12 +27,12 @@ export function AddFriendModal({ open, onOpenChange }: AddFriendModalProps) {
     e.preventDefault()
     setAddFriendError('')
     setAddFriendSuccess('')
-    if (!friendUsernameInput.trim()) return
+    if (!friendEmailInput.trim()) return
 
-    const res = await addFriend(friendUsernameInput.trim())
+    const res = await addFriend(friendEmailInput.trim())
     if (res.success) {
       setAddFriendSuccess('친구 추가에 성공했습니다!')
-      setFriendUsernameInput('')
+      setFriendEmailInput('')
       fetchFriends() // reload friends list
     } else {
       setAddFriendError(res.error || '친구 추가에 실패했습니다.')
@@ -48,7 +48,7 @@ export function AddFriendModal({ open, onOpenChange }: AddFriendModalProps) {
             <span>친구 추가</span>
           </DialogTitle>
           <DialogDescription className="text-[11px] text-slate-400">
-            상대방의 아이디로 친구를 추가할 수 있습니다.
+            상대방의 이메일 주소로 친구를 추가할 수 있습니다.
           </DialogDescription>
         </DialogHeader>
 
@@ -64,13 +64,13 @@ export function AddFriendModal({ open, onOpenChange }: AddFriendModalProps) {
             </div>
           )}
           <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">친구 아이디 (Username)</label>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">친구 이메일 주소 (Email)</label>
             <input
-              type="text"
+              type="email"
               required
-              placeholder="상대방 아이디를 입력하세요."
-              value={friendUsernameInput}
-              onChange={(e) => setFriendUsernameInput(e.target.value)}
+              placeholder="상대방 이메일 주소를 입력하세요."
+              value={friendEmailInput}
+              onChange={(e) => setFriendEmailInput(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
             />
           </div>

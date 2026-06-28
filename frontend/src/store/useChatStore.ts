@@ -1,8 +1,46 @@
-
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand'
-
 import type { User, Friendship, Message, ChatRoom, ChatRoomDetail } from '../types'
+
+const API_BASE = 'http://localhost:8080/api'
+const WS_BASE = 'ws://localhost:8080/ws'
+
+// Client-side adapter to normalize backend nested models into a backward-compatible flat object structure
+export function normalizeUser(user: any): User {
+  if (!user) return user
+  const active = user.active_membership
+  return {
+    ...user,
+    nickname: active?.nickname || user.username,
+    profile_image_url: active?.profile_image_url || undefined,
+    status_message: active?.status_message || undefined,
+    workspace: active?.workspace_name || undefined,
+    workspace_code: active?.workspace_code || undefined,
+    workspace_domain: active?.workspace_domain || undefined,
+    workspace_logo: active?.workspace_logo || undefined,
+    zioyou_company_code: active?.zioyou_company_code || undefined,
+    member_type: active?.member_type || undefined,
+    member_status: active?.status || undefined,
+    department: active?.department?.name || undefined,
+    department_code: active?.department?.code || undefined,
+    department_sort_order: active?.department?.sort_order || undefined,
+    department_manager_id: active?.department?.manager_id || undefined,
+    position: active?.department?.position?.name || undefined,
+    position_code: active?.department?.position?.code || undefined,
+    position_sort_order: active?.department?.position?.sort_order || undefined,
+    duty: active?.department?.duty?.name || undefined,
+    duty_code: active?.department?.duty?.code || undefined,
+    duty_sort_order: active?.department?.duty?.sort_order || undefined,
+  }
+}
+
+export function normalizeFriend(f: any): Friendship {
+  if (!f) return f
+  return {
+    ...f,
+    friend: normalizeUser(f.friend)
+  }
+}
 
 interface ChatStore {
   currentUser: User | null
@@ -17,8 +55,8 @@ interface ChatStore {
   isLoading: boolean
 
   // Auth actions
-  login: (username: string, password: string) => Promise<boolean>
-  register: (username: string, password: string, nickname: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<boolean>
+  register: (username: string, email: string, password: string, nickname: string) => Promise<boolean>
   logout: () => void
 
   // Users action
@@ -26,8 +64,7 @@ interface ChatStore {
   
   // Friends actions
   fetchFriends: () => Promise<void>
-  addFriend: (username: string) => Promise<{ success: boolean; error?: string }>
-  updateFriendStatus: (friendId: number, status: string) => Promise<void>
+  addFriend: (email: string) => Promise<{ success: boolean; error?: string }>
   updateMyProfile: (nickname: string, statusMessage: string, profileImageUrl?: string) => Promise<boolean>
 
   // Rooms and Messages actions
@@ -42,14 +79,11 @@ interface ChatStore {
   setupWebSocket: () => void
 }
 
-const API_BASE = 'http://localhost:8080/api'
-const WS_BASE = 'ws://localhost:8080/ws'
-
 export const useChatStore = create<ChatStore>((set, get) => ({
   currentUser: (() => {
     const user = localStorage.getItem('currentUser')
     try {
-      return user ? JSON.parse(user) : null
+      return user ? normalizeUser(JSON.parse(user)) : null
     } catch {
       return null
     }
@@ -64,9 +98,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   error: null,
   isLoading: false,
 
-  login: async (username, password) => {
+  login: async (email, password) => {
     set({ isLoading: true, error: null })
-    // Proactively close and clear any old websocket connection
     const { ws } = get()
     if (ws) {
       try {
@@ -80,7 +113,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       })
       if (!response.ok) {
         const errData = await response.json()
@@ -88,14 +121,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }
       const data = await response.json()
       localStorage.setItem('accessToken', data.access_token)
-      localStorage.setItem('currentUser', JSON.stringify(data.user))
+      localStorage.setItem('currentUser', JSON.stringify(data.user)) // store raw
+      
+      const normalizedUser = normalizeUser(data.user)
       set({ 
-        currentUser: data.user, 
+        currentUser: normalizedUser, 
         accessToken: data.access_token, 
         isLoading: false 
       })
       
-      // Auto setup WebSocket & fetch rooms
       get().setupWebSocket()
       get().fetchChatRooms()
       get().fetchFriends()
@@ -109,13 +143,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  register: async (username, password, nickname) => {
+  register: async (username, email, password, nickname) => {
     set({ isLoading: true, error: null })
     try {
       const response = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, nickname }),
+        body: JSON.stringify({ username, email, password, nickname }),
       })
       if (!response.ok) {
         const errData = await response.json()
@@ -132,7 +166,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   logout: () => {
     const { ws } = get()
-    if (ws) ws.close()
+    if (ws) {
+      try {
+        ws.close()
+      } catch (e) {
+        console.error(e)
+      }
+    }
     localStorage.removeItem('accessToken')
     localStorage.removeItem('currentUser')
     set({ 
@@ -156,7 +196,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       })
       if (response.ok) {
         const users = await response.json()
-        set({ users })
+        set({ users: users.map(normalizeUser) })
       }
     } catch (err) {
       console.error("Failed to fetch users", err)
@@ -172,14 +212,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       })
       if (response.ok) {
         const friends = await response.json()
-        set({ friends })
+        set({ friends: friends.map(normalizeFriend) })
       }
     } catch (err) {
       console.error("Failed to fetch friends", err)
     }
   },
 
-  addFriend: async (username) => {
+  addFriend: async (email) => {
     const { accessToken } = get()
     if (!accessToken) return { success: false, error: '로그인이 필요합니다.' }
     try {
@@ -189,15 +229,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}` 
         },
-        body: JSON.stringify({ friend_username: username }),
+        body: JSON.stringify({ friend_email: email }),
       })
       const data = await response.json()
       if (!response.ok) {
         return { success: false, error: data.detail || '친구 추가에 실패했습니다.' }
       }
       
+      const normalizedData = normalizeFriend(data)
       set((state) => ({
-        friends: [...state.friends, data]
+        friends: [...state.friends, normalizedData]
       }))
       return { success: true }
     } catch (err) {
@@ -206,28 +247,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  updateFriendStatus: async (friendId, status) => {
-    const { accessToken, friends } = get()
-    if (!accessToken) return
-    try {
-      const response = await fetch(`${API_BASE}/friends/${friendId}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}` 
-        },
-        body: JSON.stringify({ status }),
-      })
-      if (response.ok) {
-        const updatedFriendship = await response.json()
-        set({
-          friends: friends.map(f => f.friend_id === friendId ? updatedFriendship : f)
-        })
-      }
-    } catch (err) {
-      console.error("Failed to update friendship status", err)
-    }
-  },
+
 
   updateMyProfile: async (nickname, statusMessage, profileImageUrl) => {
     const { accessToken, currentUser } = get()
@@ -247,8 +267,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       })
       if (response.ok) {
         const updatedUser = await response.json()
-        localStorage.setItem('currentUser', JSON.stringify(updatedUser))
-        set({ currentUser: updatedUser })
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser)) // store raw
+        set({ currentUser: normalizeUser(updatedUser) })
         return true
       }
       return false
@@ -267,7 +287,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       })
       if (response.ok) {
         const rooms = await response.json()
-        set({ chatRooms: rooms })
+        const normalizedRooms = rooms.map((room: any) => ({
+          ...room,
+          members: room.members.map(normalizeUser),
+          latest_message: room.latest_message ? {
+            ...room.latest_message,
+            sender: normalizeUser(room.latest_message.sender)
+          } : undefined
+        }))
+        set({ chatRooms: normalizedRooms })
       }
     } catch (err) {
       console.error("Failed to fetch chat rooms", err)
@@ -283,9 +311,18 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       })
       if (response.ok) {
         const detail = await response.json()
-        set({ activeRoomDetail: detail })
-        
-        // Mark as read immediately when loading detail
+        const normalizedDetail: ChatRoomDetail = {
+          ...detail,
+          members: detail.members.map((m: any) => ({
+            ...m,
+            user: normalizeUser(m.user)
+          })),
+          messages: detail.messages.map((msg: any) => ({
+            ...msg,
+            sender: normalizeUser(msg.sender)
+          }))
+        }
+        set({ activeRoomDetail: normalizedDetail })
         get().markAsRead(roomId)
       }
     } catch (err) {
@@ -307,7 +344,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       })
       if (response.ok) {
         const room = await response.json()
-        await get().fetchChatRooms() // refresh list
+        await get().fetchChatRooms()
         return room.id
       }
       return null
@@ -329,7 +366,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         },
         body: JSON.stringify({ content }),
       })
-      // The websocket will broadcast the message and trigger appends/updates.
     } catch (err) {
       console.error("Failed to send message", err)
     }
@@ -344,7 +380,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         headers: { 'Authorization': `Bearer ${accessToken}` }
       })
       
-      // Update local rooms unread count to 0
       set({
         chatRooms: chatRooms.map(r => r.id === roomId ? { ...r, unread_count: 0 } : r)
       })
@@ -388,10 +423,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const { event: eventType, room_id, data } = eventData
 
       if (eventType === 'new_message') {
-        const msg = data as Message
+        const msg = {
+          ...data,
+          sender: normalizeUser(data.sender)
+        } as Message
         const { activeRoomId, activeRoomDetail, chatRooms } = get()
 
-        // 1. If active room is this room, append message and mark read
         if (activeRoomId === room_id) {
           if (activeRoomDetail) {
             set({
@@ -400,12 +437,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                 messages: [...activeRoomDetail.messages, msg]
               }
             })
-            // API call to mark as read
             get().markAsRead(room_id)
           }
         }
 
-        // 2. Update chat room list with latest message and unread count
         set({
           chatRooms: chatRooms.map(room => {
             if (room.id === room_id) {
@@ -416,7 +451,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                 unread_count: isCurrentActive ? 0 : room.unread_count + 1
               }
             }
-            return room;
+            return room
           }).sort((a, b) => {
             const timeA = a.latest_message ? new Date(a.latest_message.created_at).getTime() : new Date(a.created_at).getTime()
             const timeB = b.latest_message ? new Date(b.latest_message.created_at).getTime() : new Date(b.created_at).getTime()
@@ -424,10 +459,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           })
         })
       } else if (eventType === 'room_created') {
-        // Fetch rooms again to fetch complete payload
         get().fetchChatRooms()
       } else if (eventType === 'room_read') {
-        // Clear unread counts for specific room
         if (eventData.user_id === currentUser.id) {
           set({
             chatRooms: get().chatRooms.map(r => r.id === room_id ? { ...r, unread_count: 0 } : r)
@@ -439,7 +472,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     socket.onclose = () => {
       console.log('Realtime WebSocket connection closed. Reconnecting...')
       set({ ws: null })
-      // Reconnect after 3s if still logged in
       setTimeout(() => {
         if (get().currentUser) {
           get().setupWebSocket()

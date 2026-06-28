@@ -34,10 +34,6 @@ export function ChatsTab({ searchQuery, sortType }: ChatsTabProps) {
     }
     window.addEventListener('storage', handleStorageChange)
     
-    // Also sync whenever this tab is rendered
-    const saved = localStorage.getItem('chatFolders')
-    if (saved) setFolders(JSON.parse(saved))
-    
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
@@ -80,7 +76,7 @@ export function ChatsTab({ searchQuery, sortType }: ChatsTabProps) {
     const otherMember = room.members.find(m => m.id !== currentUser.id)
     if (!otherMember) return false
     const friendship = friends.find(f => f.friend_id === otherMember.id)
-    return friendship?.status === 'FAVORITE'
+    return !!friendship
   }
 
   // 4. Sort rooms based on sortType

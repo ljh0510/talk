@@ -12,6 +12,7 @@ export function AuthCard({ darkMode, setDarkMode }: AuthCardProps) {
 
   const [isRegisterMode, setIsRegisterMode] = useState(false)
   const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [nickname, setNickname] = useState('')
   const [authSuccessMsg, setAuthSuccessMsg] = useState('')
@@ -22,14 +23,14 @@ export function AuthCard({ darkMode, setDarkMode }: AuthCardProps) {
     setAuthSuccessMsg('')
 
     if (isRegisterMode) {
-      const success = await register(username, password, nickname)
+      const success = await register(username, email, password, nickname)
       if (success) {
         setAuthSuccessMsg('회원가입이 완료되었습니다! 로그인 해주세요.')
         setIsRegisterMode(false)
         setPassword('')
       }
     } else {
-      await login(username, password)
+      await login(email, password)
     }
   }
 
@@ -66,14 +67,28 @@ export function AuthCard({ darkMode, setDarkMode }: AuthCardProps) {
           )}
 
           <form onSubmit={handleAuthSubmit} className="space-y-4">
+            {isRegisterMode && (
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">아이디 (Username)</label>
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="아이디를 입력하세요"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-kakao-yellow dark:focus:ring-yellow-500 transition-all text-sm"
+                />
+              </div>
+            )}
+
             <div>
-              <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">아이디</label>
+              <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">이메일 주소</label>
               <input
-                type="text"
+                type="email"
                 required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="아이디를 입력하세요"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="이메일 주소를 입력하세요"
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-kakao-yellow dark:focus:ring-yellow-500 transition-all text-sm"
               />
             </div>

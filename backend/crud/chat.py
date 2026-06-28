@@ -1,12 +1,14 @@
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from sqlalchemy.orm import selectinload, joinedload
 import models
 import schemas
 
-async def create_chat_room(db: AsyncSession, room_in: schemas.ChatRoomCreate, creator_id: int):
+async def create_chat_room(db: AsyncSession, room_in: schemas.ChatRoomCreate, creator_id: int, workspace_id: int):
     member_ids = list(set(room_in.member_ids + [creator_id]))
     db_room = models.ChatRoom(
+        workspace_id=workspace_id,
         name=room_in.name,
         is_group=room_in.is_group or len(member_ids) > 2
     )
@@ -19,7 +21,8 @@ async def create_chat_room(db: AsyncSession, room_in: schemas.ChatRoomCreate, cr
         if user:
             member_assoc = models.ChatRoomMember(
                 room_id=db_room.id,
-                user_id=member_id
+                user_id=member_id,
+                workspace_id=workspace_id
             )
             db.add(member_assoc)
             
@@ -38,7 +41,7 @@ async def get_chat_room_detail(db: AsyncSession, room_id: int):
     )
     return result.scalars().first()
 
-async def get_user_chat_rooms(db: AsyncSession, user_id: int):
+async def get_user_chat_rooms(db: AsyncSession, user_id: int, workspace_id: int):
     latest_msg_sub = (
         select(
             models.Message.room_id,
@@ -72,6 +75,7 @@ async def get_user_chat_rooms(db: AsyncSession, user_id: int):
             latest_msg_sub,
             latest_msg_sub.c.room_id == models.ChatRoom.id
         )
+        .where(models.ChatRoom.workspace_id == workspace_id)
         .group_by(models.ChatRoom.id, latest_msg_sub.c.max_id)
         .options(
             selectinload(models.ChatRoom.room_members).selectinload(models.ChatRoomMember.user)
@@ -153,8 +157,7 @@ async def update_last_read(db: AsyncSession, room_id: int, user_id: int):
     result = await db.execute(stmt)
     member = result.scalars().first()
     if member:
-        from datetime import datetime
-        member.last_read_at = datetime.utcnow()
+        member.last_read_at = datetime.now(timezone.utc)
         await db.commit()
         return True
     return False

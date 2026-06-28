@@ -1,7 +1,6 @@
-import { useChatStore } from '../../store/useChatStore'
 import type { User } from '../../types'
 import { Dialog, DialogContent } from '../../components/ui/Dialog'
-import { Ban, MessageSquare } from 'lucide-react'
+import { MessageSquare } from 'lucide-react'
 
 interface ProfileCardModalProps {
   open: boolean
@@ -11,17 +10,7 @@ interface ProfileCardModalProps {
 }
 
 export function ProfileCardModal({ open, onOpenChange, user, onStartChat }: ProfileCardModalProps) {
-  const { updateFriendStatus, fetchFriends } = useChatStore()
-
   if (!user) return null
-
-  const handleBlockUser = async () => {
-    if (confirm(`${user.nickname}님을 차단하시겠습니까?`)) {
-      await updateFriendStatus(user.id, 'BLOCKED')
-      onOpenChange(false)
-      fetchFriends()
-    }
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -32,13 +21,6 @@ export function ProfileCardModal({ open, onOpenChange, user, onStartChat }: Prof
           
           {/* Top Bar with actions */}
           <div className="relative z-10 flex justify-end p-4">
-            <button
-              onClick={handleBlockUser}
-              className="p-1.5 rounded-lg bg-black/30 hover:bg-black/50 transition-colors text-slate-300 hover:text-red-400"
-              title="친구 차단"
-            >
-              <Ban size={15} />
-            </button>
           </div>
 
           {/* Main Content Area */}
@@ -56,7 +38,60 @@ export function ProfileCardModal({ open, onOpenChange, user, onStartChat }: Prof
 
             {/* Nickname & Username */}
             <h3 className="text-lg font-bold tracking-tight mb-1">{user.nickname}</h3>
-            <span className="text-[10px] text-zinc-400 font-semibold mb-4">@{user.username}</span>
+            <span className="text-[10px] text-zinc-400 font-semibold mb-2">@{user.username}</span>
+
+            {/* Corporate structure (Read-only lookup) */}
+            {user.workspace && (
+              <div className="flex flex-col items-center mb-4 space-y-1 text-[10px] text-zinc-400 font-semibold select-none shrink-0 w-full">
+                <div className="flex flex-col items-center space-y-1 w-full">
+                  <span className="bg-zinc-800/80 px-2 py-0.5 rounded text-[9px] text-zinc-300 max-w-[240px] truncate text-center flex items-center justify-center">
+                    {user.workspace_logo ? (
+                      <img src={user.workspace_logo} className="w-3 h-3 rounded-full object-cover shrink-0 mr-1" alt="" />
+                    ) : (
+                      <span className="mr-0.5">🏢</span>
+                    )}
+                    <span>
+                      {user.workspace} 
+                      {user.workspace_code ? ` (${user.workspace_code})` : ''}
+                      {user.zioyou_company_code ? ` [지오유: ${user.zioyou_company_code}]` : ''}
+                    </span>
+                  </span>
+                  {user.department && (
+                    <span className="bg-zinc-800/80 px-2 py-0.5 rounded text-[9px] text-zinc-300 max-w-[200px] truncate text-center">
+                      📂 {user.department} {user.department_code ? `(${user.department_code})` : ''}
+                    </span>
+                  )}
+                  {/* Member Type & Status badges */}
+                  {(user.member_type || user.member_status) && (
+                    <div className="flex items-center space-x-1 mt-0.5">
+                      {user.member_type && (
+                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${
+                          user.member_type === 'ADMIN' ? 'bg-amber-950/85 text-amber-400 border border-amber-800' : 'bg-zinc-800 text-zinc-400'
+                        }`}>
+                          {user.member_type === 'ADMIN' ? '관리자' : '일반'}
+                        </span>
+                      )}
+                      {user.member_status && (
+                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${
+                          user.member_status === 'ACTIVE' ? 'bg-emerald-950/85 text-emerald-400' :
+                          user.member_status === 'LEAVE' ? 'bg-amber-950/85 text-amber-400' :
+                          'bg-rose-950/85 text-rose-400'
+                        }`}>
+                          {user.member_status === 'ACTIVE' ? '재직' :
+                           user.member_status === 'LEAVE' ? '휴직' : '퇴사'}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {(user.position || user.duty) && (
+                  <span className="text-[9px] text-zinc-500 font-bold">
+                    {user.position || ''}{user.position_code ? ` [${user.position_code}]` : ''}
+                    {user.duty ? ` (${user.duty}${user.duty_code ? ` [${user.duty_code}]` : ''})` : ''}
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Status Message */}
             <p className="text-xs text-zinc-300 text-center font-medium max-w-full truncate px-2 py-1 bg-white/5 dark:bg-black/10 rounded-lg min-h-[26px]">

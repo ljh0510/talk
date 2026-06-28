@@ -1,5 +1,5 @@
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +12,8 @@ from schemas import (
     ChatRoomCreate, ChatRoomDetailResponse, ChatRoomListResponse,
     MessageResponse, MessageCreate
 )
+from routers.users import map_user_to_response
+import crud
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
@@ -21,6 +23,13 @@ async def create_room(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    target_ws_id = current_user.workspace_id
+    if not target_ws_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="사용자가 현재 소속된 활성 워크스페이스가 존재하지 않습니다."
+        )
+
     all_member_ids = list(set(room_in.member_ids + [current_user.id]))
     
     # 1. Validation
@@ -34,7 +43,7 @@ async def create_room(
         
     is_group = len(all_member_ids) > 2 or room_in.name is not None
     
-    # 2. Check for existing DIRECT chat
+    # 2. Check for existing DIRECT chat within this workspace
     if not is_group and len(all_member_ids) == 2:
         u1, u2 = all_member_ids[0], all_member_ids[1]
         
@@ -42,6 +51,7 @@ async def create_room(
             select(ChatRoomMember.room_id)
             .join(ChatRoom, ChatRoom.id == ChatRoomMember.room_id)
             .filter(ChatRoom.is_group == False)
+            .filter(ChatRoom.workspace_id == target_ws_id)
             .filter(ChatRoomMember.user_id.in_([u1, u2]))
             .group_by(ChatRoomMember.room_id)
             .having(func.count(ChatRoomMember.user_id) == 2)
@@ -69,7 +79,7 @@ async def create_room(
             
             for mem in room.room_members:
                 if mem.user_id == current_user.id:
-                    mem.last_read_at = datetime.utcnow()
+                    mem.last_read_at = datetime.now(timezone.utc)
                     db.add(mem)
             await db.commit()
             
@@ -79,20 +89,21 @@ async def create_room(
                 {"event": "room_created", "room_id": room.id, "data": {}}
             )
 
-            members_list = [m.user for m in room.room_members]
+            members_list = [map_user_to_response(m.user) for m in room.room_members]
             
-            return ChatRoomListResponse(
-                id=room.id,
-                name=room.name,
-                is_group=room.is_group,
-                created_at=room.created_at,
-                members=members_list,
-                latest_message=last_msg,
-                unread_count=0
-            )
+            return {
+                "id": room.id,
+                "name": room.name,
+                "is_group": room.is_group,
+                "created_at": room.created_at,
+                "members": members_list,
+                "latest_message": last_msg,
+                "unread_count": 0
+            }
 
-    # 3. Create new room
+    # 3. Create new room bound under workspace scope
     new_room = ChatRoom(
+        workspace_id=target_ws_id,
         name=room_in.name,
         is_group=is_group
     )
@@ -104,7 +115,8 @@ async def create_room(
         member = ChatRoomMember(
             room_id=new_room.id,
             user_id=user_id,
-            last_read_at=datetime.utcnow()
+            workspace_id=target_ws_id,
+            last_read_at=datetime.now(timezone.utc)
         )
         db.add(member)
         
@@ -118,7 +130,7 @@ async def create_room(
     res = await db.execute(q)
     room = res.scalars().first()
     
-    members_list = [m.user for m in room.room_members]
+    members_list = [map_user_to_response(m.user) for m in room.room_members]
     
     other_members = [uid for uid in all_member_ids if uid != current_user.id]
     await manager.broadcast_to_members(
@@ -126,15 +138,15 @@ async def create_room(
         {"event": "room_created", "room_id": room.id, "data": {}}
     )
 
-    return ChatRoomListResponse(
-        id=room.id,
-        name=room.name,
-        is_group=room.is_group,
-        created_at=room.created_at,
-        members=members_list,
-        latest_message=None,
-        unread_count=0
-    )
+    return {
+        "id": room.id,
+        "name": room.name,
+        "is_group": room.is_group,
+        "created_at": room.created_at,
+        "members": members_list,
+        "latest_message": None,
+        "unread_count": 0
+    }
 
 
 @router.get("", response_model=List[ChatRoomListResponse])
@@ -142,10 +154,19 @@ async def list_rooms(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    target_ws_id = current_user.workspace_id
+    if not target_ws_id:
+        return []
+
     query = (
         select(ChatRoom)
         .join(ChatRoomMember, ChatRoom.id == ChatRoomMember.room_id)
-        .filter(ChatRoomMember.user_id == current_user.id)
+        .filter(
+            and_(
+                ChatRoomMember.user_id == current_user.id,
+                ChatRoom.workspace_id == target_ws_id
+            )
+        )
         .options(selectinload(ChatRoom.room_members).selectinload(ChatRoomMember.user))
     )
     
@@ -179,7 +200,7 @@ async def list_rooms(
         unread_res = await db.execute(unread_query)
         unread_count = unread_res.scalar() or 0
         
-        members_list = [m.user for m in room.room_members]
+        members_list = [map_user_to_response(m.user) for m in room.room_members]
         
         detailed_rooms.append({
             "id": room.id,
@@ -245,7 +266,7 @@ async def get_room_detail(
     for m in room.room_members:
         members_detail.append({
             "user_id": m.user_id,
-            "user": m.user,
+            "user": map_user_to_response(m.user),
             "joined_at": m.joined_at,
             "last_read_at": m.last_read_at
         })
@@ -288,7 +309,7 @@ async def send_message(
     )
     db.add(new_msg)
     
-    membership.last_read_at = datetime.utcnow()
+    membership.last_read_at = datetime.now(timezone.utc)
     db.add(membership)
     
     await db.flush()
@@ -310,14 +331,7 @@ async def send_message(
             "id": new_msg.id,
             "room_id": room_id,
             "sender_id": current_user.id,
-            "sender": {
-                "id": sender.id,
-                "username": sender.username,
-                "nickname": sender.nickname,
-                "profile_image_url": sender.profile_image_url,
-                "status_message": sender.status_message,
-                "created_at": sender.created_at.isoformat()
-            },
+            "sender": map_user_to_response(sender),
             "content": new_msg.content,
             "message_type": new_msg.message_type,
             "created_at": new_msg.created_at.isoformat()
@@ -329,7 +343,7 @@ async def send_message(
         "id": new_msg.id,
         "room_id": room_id,
         "sender_id": current_user.id,
-        "sender": sender,
+        "sender": map_user_to_response(sender),
         "content": new_msg.content,
         "message_type": new_msg.message_type,
         "created_at": new_msg.created_at
@@ -355,7 +369,7 @@ async def mark_room_as_read(
             detail="Chat room membership not found"
         )
         
-    membership.last_read_at = datetime.utcnow()
+    membership.last_read_at = datetime.now(timezone.utc)
     db.add(membership)
     await db.commit()
     

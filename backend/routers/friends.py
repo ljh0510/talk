@@ -1,33 +1,32 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 from core.database import get_db
 from core.dependencies import get_current_user
-from models import User, Friendship
-from schemas import FriendResponse, FriendAdd, FriendUpdate
+from models import User
+from schemas import FriendResponse, FriendAdd
+from routers.users import map_user_to_response
+import crud
 
 router = APIRouter(prefix="/friends", tags=["friends"])
 
 @router.get("", response_model=List[FriendResponse])
 async def list_friends(
+    workspace_id: Optional[int] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(
-        select(Friendship)
-        .filter(Friendship.user_id == current_user.id)
-        .options(selectinload(Friendship.friend))
-    )
-    friends = result.scalars().all()
+    target_ws_id = workspace_id or current_user.workspace_id
+    if not target_ws_id:
+        return []
+        
+    friends = await crud.get_friends_list(db, current_user.id, target_ws_id)
     
     response = []
     for f in friends:
         response.append({
             "friend_id": f.friend_id,
-            "status": f.status,
-            "friend": f.friend
+            "friend": map_user_to_response(f.friend)
         })
     return response
 
@@ -38,84 +37,27 @@ async def add_friend(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    if friend_add.friend_username == current_user.username:
+    if friend_add.friend_email == current_user.email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You cannot add yourself as a friend"
         )
         
-    result = await db.execute(select(User).filter(User.username == friend_add.friend_username))
-    friend_user = result.scalars().first()
-    if not friend_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-        
-    check_result = await db.execute(
-        select(Friendship).filter(
-            Friendship.user_id == current_user.id,
-            Friendship.friend_id == friend_user.id
-        )
-    )
-    existing_friend = check_result.scalars().first()
-    if existing_friend:
+    target_ws_id = current_user.workspace_id
+    if not target_ws_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You are already friends with this user"
+            detail="사용자가 현재 소속된 활성 워크스페이스가 존재하지 않습니다."
         )
         
-    new_friend = Friendship(
-        user_id=current_user.id,
-        friend_id=friend_user.id,
-        status="FRIEND"
-    )
-    db.add(new_friend)
-    await db.flush()
-    
-    query = select(Friendship).filter(
-        Friendship.user_id == current_user.id,
-        Friendship.friend_id == friend_user.id
-    ).options(selectinload(Friendship.friend))
-    
-    res = await db.execute(query)
-    friend_record = res.scalars().first()
-    
-    await db.commit()
-    
+    friend_record, err = await crud.add_friend(db, current_user.id, friend_add.friend_email, target_ws_id)
+    if err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=err
+        )
+        
     return {
         "friend_id": friend_record.friend_id,
-        "status": friend_record.status,
-        "friend": friend_record.friend
-    }
-
-
-@router.put("/{friend_id}", response_model=FriendResponse)
-async def update_friend(
-    friend_id: int,
-    friend_update: FriendUpdate,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    result = await db.execute(
-        select(Friendship)
-        .filter(Friendship.user_id == current_user.id, Friendship.friend_id == friend_id)
-        .options(selectinload(Friendship.friend))
-    )
-    friendship = result.scalars().first()
-    if not friendship:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Friendship not found"
-        )
-        
-    friendship.status = friend_update.status
-    db.add(friendship)
-    await db.commit()
-    await db.refresh(friendship)
-    
-    return {
-        "friend_id": friendship.friend_id,
-        "status": friendship.status,
-        "friend": friendship.friend
+        "friend": map_user_to_response(friend_record.friend)
     }

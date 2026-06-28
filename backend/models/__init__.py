@@ -1,5 +1,5 @@
 from core.database import Base
-from models.user import User, Friendship
+from models.user import User, Friendship, Workspace, WorkspaceMember, Department, DepartmentMember, Position, Duty
 from models.chat import ChatRoom, ChatRoomMember, Message
 
-__all__ = ["Base", "User", "Friendship", "ChatRoom", "ChatRoomMember", "Message"]
+__all__ = ["Base", "User", "Friendship", "Workspace", "WorkspaceMember", "Department", "DepartmentMember", "Position", "Duty", "ChatRoom", "ChatRoomMember", "Message"]

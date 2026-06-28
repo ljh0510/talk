@@ -1,10 +1,10 @@
 from crud.user import (
     get_user_by_username,
+    get_user_by_email,
     create_user,
     get_users_list,
     get_friends_list,
     add_friend,
-    update_friend_status,
     update_user_profile,
     get_user_by_id
 )

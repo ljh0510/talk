@@ -47,7 +47,11 @@ async def handle_websocket_session(websocket: WebSocket, user_id: int):
         if not user:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
-        display_name = user.nickname
+        
+        rep = next((m for m in user.workspace_memberships if m.is_representative), None)
+        if not rep and user.workspace_memberships:
+            rep = user.workspace_memberships[0]
+        display_name = rep.nickname if rep else user.username
 
     # 2. Connect client
     await manager.connect(str(user_id), websocket)

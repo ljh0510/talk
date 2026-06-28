@@ -30,7 +30,7 @@ export function FriendsTab({ searchQuery, setActiveTab }: FriendsTabProps) {
     setActiveTab('chats')
   }
 
-  const activeFriendships = friends.filter(f => f.status === 'FRIEND')
+  const activeFriendships = friends
 
   const filteredFriends = activeFriendships.filter(f => {
     const q = searchQuery.toLowerCase().trim()
@@ -68,7 +68,21 @@ export function FriendsTab({ searchQuery, setActiveTab }: FriendsTabProps) {
       {filteredFriends.length === 0 ? (
         <div className="text-center py-8 text-xs text-slate-400">검색된 친구가 없습니다.</div>
       ) : (
-        filteredFriends.map(f => (
+        [...filteredFriends].sort((a, b) => {
+          const aDept = a.friend.department_sort_order ?? 9999
+          const bDept = b.friend.department_sort_order ?? 9999
+          if (aDept !== bDept) return aDept - bDept
+
+          const aPos = a.friend.position_sort_order ?? 9999
+          const bPos = b.friend.position_sort_order ?? 9999
+          if (aPos !== bPos) return aPos - bPos
+
+          const aDuty = a.friend.duty_sort_order ?? 9999
+          const bDuty = b.friend.duty_sort_order ?? 9999
+          if (aDuty !== bDuty) return aDuty - bDuty
+
+          return a.friend.nickname.localeCompare(b.friend.nickname)
+        }).map(f => (
           <div
             key={f.friend_id}
             onClick={() => {

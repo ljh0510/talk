@@ -6,56 +6,47 @@ from core.database import get_db
 from models import User
 from schemas import UserCreate, UserLogin, UserResponse
 from core.security import verify_password, get_password_hash, create_access_token
+from routers.users import map_user_to_response
+import crud
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
-    # Check if username exists
-    result = await db.execute(select(User).filter(User.username == user_in.username))
-    existing_user = result.scalars().first()
-    if existing_user:
+    # Check if email exists
+    result_email = await db.execute(select(User).filter(User.email == user_in.email))
+    if result_email.scalars().first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Check if username exists (warn but do not restrict as strictly if requested)
+    result_username = await db.execute(select(User).filter(User.username == user_in.username))
+    if result_username.scalars().first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
         )
     
-    # Hash password and create new user
-    hashed_pwd = get_password_hash(user_in.password)
-    db_user = User(
-        username=user_in.username,
-        nickname=user_in.nickname,
-        hashed_password=hashed_pwd,
-        profile_image_url=user_in.profile_image_url,
-        status_message=user_in.status_message
-    )
-    
-    db.add(db_user)
-    await db.commit()
-    await db.refresh(db_user)
-    return db_user
+    # Hash password and create new user using proper transactional crud helper
+    db_user = await crud.create_user(db, user_in)
+    return map_user_to_response(db_user)
 
 
 @router.post("/login")
 async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).filter(User.username == credentials.username))
-    user = result.scalars().first()
+    # Fetch user by email with eager load relations
+    user = await crud.get_user_by_email(db, credentials.email)
     if not user or not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incorrect username or password"
+            detail="Incorrect email or password"
         )
         
     access_token = create_access_token(data={"sub": str(user.id)})
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "nickname": user.nickname,
-            "profile_image_url": user.profile_image_url,
-            "status_message": user.status_message,
-            "created_at": user.created_at.isoformat()
-        }
+        "user": map_user_to_response(user)
     }
