@@ -4,9 +4,7 @@ from sqlalchemy.orm import selectinload, joinedload
 from app import models, schemas
 import hashlib
 
-# Simple hashing for password (for demonstration, easily upgradable to bcrypt/argon2)
-def get_password_hash(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
+from app.security import get_password_hash
 
 # User CRUD
 async def get_user_by_username(db: AsyncSession, username: str):
@@ -147,7 +145,7 @@ async def get_user_chat_rooms(db: AsyncSession, user_id: int):
         latest_msg = latest_messages.get(latest_message_id) if latest_message_id else None
         
         response_rooms.append(
-            schemas.ChatRoomResponse(
+            schemas.ChatRoomListResponse(
                 id=room.id,
                 name=room.name,
                 is_group=room.is_group,

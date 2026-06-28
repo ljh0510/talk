@@ -395,8 +395,7 @@ export default function App() {
             onClick={() => setActiveTab('friends')}
             className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${activeTab === 'friends' ? 'bg-white dark:bg-zinc-800 text-kakao-brown dark:text-yellow-400 shadow' : 'text-slate-500 hover:bg-slate-300/50 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-200'}`}
           >
-            <Users size={22} fill={activeTab === 'friends' ? 'currentColor' : 'none'} />
-            <span className="absolute bottom-1 text-[9px] font-bold">친구</span>
+            <Users size={24} fill={activeTab === 'friends' ? 'currentColor' : 'none'} />
           </button>
 
           {/* Chat List Tab Button */}
@@ -404,8 +403,7 @@ export default function App() {
             onClick={() => setActiveTab('chats')}
             className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${activeTab === 'chats' ? 'bg-white dark:bg-zinc-800 text-kakao-brown dark:text-yellow-400 shadow' : 'text-slate-500 hover:bg-slate-300/50 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-200'}`}
           >
-            <MessageCircle size={22} fill={activeTab === 'chats' ? 'currentColor' : 'none'} />
-            <span className="absolute bottom-1 text-[9px] font-bold">채팅</span>
+            <MessageCircle size={24} fill={activeTab === 'chats' ? 'currentColor' : 'none'} />
             {chatRooms.reduce((acc, r) => acc + r.unread_count, 0) > 0 && (
               <div className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border border-white dark:border-zinc-900 shadow">
                 {chatRooms.reduce((acc, r) => acc + r.unread_count, 0)}

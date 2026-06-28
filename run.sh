@@ -61,9 +61,9 @@ cleanup() {
 trap cleanup SIGINT SIGTERM EXIT
 
 # Start Backend
-echo "Starting FastAPI Backend on http://localhost:8000..."
+echo "Starting FastAPI Backend on http://localhost:8080..."
 cd "$BACKEND_DIR"
-"$BACKEND_DIR/venv/bin/python" -m uvicorn app.main:app --host 0.0.0.0 --port 8000 > "$ROOT_DIR/backend.log" 2>&1 &
+"$BACKEND_DIR/venv/bin/python" -m uvicorn app.main:app --host 0.0.0.0 --port 8080 > "$ROOT_DIR/backend.log" 2>&1 &
 BACKEND_PID=$!
 
 # Start Frontend

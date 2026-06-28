@@ -91,8 +91,8 @@ interface ChatStore {
   setupWebSocket: () => void
 }
 
-const API_BASE = 'http://localhost:8000/api'
-const WS_BASE = 'ws://localhost:8000/ws'
+const API_BASE = 'http://localhost:8080/api'
+const WS_BASE = 'ws://localhost:8080/ws'
 
 export const useChatStore = create<ChatStore>((set, get) => ({
   currentUser: null,
@@ -108,6 +108,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   login: async (username, password) => {
     set({ isLoading: true, error: null })
+    // Proactively close and clear any old websocket connection
+    const { ws } = get()
+    if (ws) {
+      try {
+        ws.close()
+      } catch (e) {
+        console.error(e)
+      }
+      set({ ws: null })
+    }
     try {
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
@@ -388,7 +398,18 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   setupWebSocket: () => {
     const { currentUser, ws } = get()
-    if (!currentUser || ws) return
+    if (!currentUser) return
+
+    if (ws) {
+      if (ws.url.endsWith(`/chat/${currentUser.id}`)) {
+        return
+      }
+      try {
+        ws.close()
+      } catch (e) {
+        console.error(e)
+      }
+    }
 
     const socket = new WebSocket(`${WS_BASE}/chat/${currentUser.id}`)
 
