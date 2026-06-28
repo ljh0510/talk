@@ -226,7 +226,7 @@ export function MoreDetail({ activeSubTab, darkMode, setDarkMode, triggerToast }
       </div>
 
       {/* Scrollable Content Container */}
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 overflow-y-auto px-6 py-8">
         <div className="max-w-xl w-full mx-auto space-y-6">
 
           {/* 1. PROFILE APP PAGE */}

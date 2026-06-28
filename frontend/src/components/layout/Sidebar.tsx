@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useChatStore } from '../../store/useChatStore'
-import { Users, MessageCircle, Bell, BellOff, Settings, LogOut, XSquare, MoreHorizontal } from 'lucide-react'
+import { Users, MessageCircle, Search, Bell, BellOff, Settings, LogOut, XSquare, MoreHorizontal } from 'lucide-react'
 
 interface SidebarProps {
   activeTab: 'friends' | 'chats' | 'settings' | 'more'
@@ -79,6 +79,16 @@ export function Sidebar({
               {unreadTotal}
             </div>
           )}
+        </button>
+
+        {/* 2.5. Search Button (Placeholder) */}
+        <button
+          type="button"
+          className="w-12 h-12 rounded-xl flex items-center justify-center transition-all text-slate-500 hover:bg-slate-300/50 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-200 cursor-not-allowed opacity-80"
+          title="검색 (준비 중)"
+          disabled
+        >
+          <Search size={24} />
         </button>
 
         {/* 3. Settings Tab Button */}
