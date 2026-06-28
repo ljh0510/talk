@@ -15,6 +15,7 @@ export function MembersTab({ searchQuery, setActiveTab }: MembersTabProps) {
   const [isMyProfileEditOpen, setIsMyProfileEditOpen] = useState(false)
   const [isProfileCardOpen, setIsProfileCardOpen] = useState(false)
   const [selectedProfileUser, setSelectedProfileUser] = useState<User | null>(null)
+  const [sortBy, setSortBy] = useState<'name' | 'date'>('name')
 
   if (!currentUser) return null
 
@@ -105,9 +106,14 @@ export function MembersTab({ searchQuery, setActiveTab }: MembersTabProps) {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center space-x-1.5">
+                    <div className="flex items-center space-x-1 flex-wrap">
                       <span className="text-xs font-bold text-slate-800 dark:text-zinc-100">{m.member.nickname}</span>
-                      <span className="text-[9px] px-1 py-0.2 bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 rounded font-bold">생일</span>
+                      {m.member.position && (
+                        <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">
+                          {m.member.position}
+                        </span>
+                      )}
+                      <span className="text-[9px] px-1 py-0.2 bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 rounded font-bold shrink-0">생일</span>
                     </div>
                     <p className="text-[10px] text-slate-400 truncate mt-0.5">
                       {m.member.status_message || '생일 축하 메시지를 남겨보세요! 🎉'}
@@ -131,24 +137,27 @@ export function MembersTab({ searchQuery, setActiveTab }: MembersTabProps) {
             {filteredMembers.length}
           </span>
         </h4>
+
+        {/* Sort Selector Dropdown */}
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as 'name' | 'date')}
+          className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 bg-transparent border-none cursor-pointer hover:text-slate-600 dark:hover:text-zinc-300 focus:outline-none dark:bg-zinc-900/80"
+        >
+          <option value="name" className="dark:bg-zinc-900 dark:text-zinc-200">이름순</option>
+          <option value="date" className="dark:bg-zinc-900 dark:text-zinc-200">등록일 순</option>
+        </select>
       </div>
       
       {filteredMembers.length === 0 ? (
         <div className="text-center py-8 text-xs text-slate-400">검색된 멤버가 없습니다.</div>
       ) : (
         [...filteredMembers].sort((a, b) => {
-          const aDept = a.member.department_sort_order ?? 9999
-          const bDept = b.member.department_sort_order ?? 9999
-          if (aDept !== bDept) return aDept - bDept
-
-          const aPos = a.member.position_sort_order ?? 9999
-          const bPos = b.member.position_sort_order ?? 9999
-          if (aPos !== bPos) return aPos - bPos
-
-          const aDuty = a.member.duty_sort_order ?? 9999
-          const bDuty = b.member.duty_sort_order ?? 9999
-          if (aDuty !== bDuty) return aDuty - bDuty
-
+          if (sortBy === 'date') {
+            const aTime = a.member.created_at ? new Date(a.member.created_at).getTime() : 0
+            const bTime = b.member.created_at ? new Date(b.member.created_at).getTime() : 0
+            if (aTime !== bTime) return aTime - bTime
+          }
           return a.member.nickname.localeCompare(b.member.nickname)
         }).map(m => (
           <div
@@ -168,7 +177,14 @@ export function MembersTab({ searchQuery, setActiveTab }: MembersTabProps) {
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-xs font-bold text-slate-800 dark:text-zinc-100">{m.member.nickname}</h3>
+                <div className="flex items-center space-x-1 flex-wrap">
+                  <span className="text-xs font-bold text-slate-800 dark:text-zinc-100">{m.member.nickname}</span>
+                  {m.member.position && (
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">
+                      {m.member.position}
+                    </span>
+                  )}
+                </div>
                 <p className="text-[10px] text-slate-400 truncate mt-0.5">
                   {m.member.status_message || ''}
                 </p>
