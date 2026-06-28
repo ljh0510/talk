@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useChatStore } from '../../store/useChatStore'
 import { Sidebar } from './Sidebar'
 import { FriendsTab } from '../../features/friend/FriendsTab'
@@ -35,6 +35,44 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
   const [isProfileCardOpen, setIsProfileCardOpen] = useState(false)
   const [isMyProfileEditOpen, setIsMyProfileEditOpen] = useState(false)
   const [isLocked, setIsLocked] = useState(false)
+
+  // Auto-Lock Idle Detection
+  useEffect(() => {
+    if (isLocked) return
+
+    const getAutoLockMinutes = () => {
+      const val = localStorage.getItem('autoLockMinutes')
+      if (!val || val === 'off') return null
+      return parseInt(val, 10)
+    }
+
+    let idleTimeout: number | null = null
+
+    const resetIdleTimer = () => {
+      if (idleTimeout) window.clearTimeout(idleTimeout)
+
+      const minutes = getAutoLockMinutes()
+      if (minutes === null) return
+
+      idleTimeout = window.setTimeout(() => {
+        setIsLocked(true)
+      }, minutes * 60 * 1000)
+    }
+
+    resetIdleTimer()
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'click']
+    events.forEach(event => {
+      window.addEventListener(event, resetIdleTimer)
+    })
+
+    return () => {
+      if (idleTimeout) window.clearTimeout(idleTimeout)
+      events.forEach(event => {
+        window.removeEventListener(event, resetIdleTimer)
+      })
+    }
+  }, [isLocked])
 
   // Confirmation Modals (Logout & Exit)
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)

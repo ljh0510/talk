@@ -29,10 +29,32 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
   const [newPinInput, setNewPinInput] = useState('')
   const [confirmNewPinInput, setConfirmNewPinInput] = useState('')
   const [pinChangeMessage, setPinChangeMessage] = useState({ text: '', isError: false })
+  const [autoLockMinutes, setAutoLockMinutes] = useState(() => {
+    return localStorage.getItem('autoLockMinutes') || 'off'
+  })
+
+  // Toast Alert states
+  const [toastText, setToastText] = useState('')
+  const [toastOpen, setToastOpen] = useState(false)
+
+  const triggerToast = (msg: string) => {
+    setToastText(msg)
+    setToastOpen(true)
+  }
+
+  // Auto-hide toast after 2.5 seconds
+  useEffect(() => {
+    if (!toastOpen) return
+    const timer = setTimeout(() => {
+      setToastOpen(false)
+    }, 2500)
+    return () => clearTimeout(timer)
+  }, [toastOpen])
 
   useEffect(() => {
     setNotificationsEnabled(localStorage.getItem('notificationsEnabled') !== 'false')
     setAccentColor(localStorage.getItem('accentColor') || 'yellow')
+    setAutoLockMinutes(localStorage.getItem('autoLockMinutes') || 'off')
     setCurrentPinInput('')
     setNewPinInput('')
     setConfirmNewPinInput('')
@@ -43,6 +65,13 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
     const newVal = !notificationsEnabled
     setNotificationsEnabled(newVal)
     localStorage.setItem('notificationsEnabled', String(newVal))
+    triggerToast(newVal ? '데스크톱 푸시 알림이 활성화되었습니다.' : '데스크톱 푸시 알림이 비활성화되었습니다.')
+  }
+
+  const handleDarkModeToggle = () => {
+    const nextMode = !darkMode
+    setDarkMode(nextMode)
+    triggerToast(nextMode ? '다크 모드가 적용되었습니다.' : '라이트 모드가 적용되었습니다.')
   }
 
   const handleAccentColorChange = (color: string) => {
@@ -59,6 +88,14 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
     } else if (color === 'purple') {
       root.style.setProperty('--primary-accent', '#7c3aed')
     }
+
+    const colorLabels: Record<string, string> = {
+      yellow: '카카오 옐로우',
+      blue: '클래식 블루',
+      emerald: '에메랄드 그린',
+      purple: '딥 퍼플'
+    }
+    triggerToast(`브랜드 컬러가 ${colorLabels[color] || color}로 변경되었습니다.`)
   }
 
   const handlePinChangeSubmit = (e: React.FormEvent) => {
@@ -69,21 +106,25 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
 
     if (currentPinInput !== activePin) {
       setPinChangeMessage({ text: '현재 비밀번호가 일치하지 않습니다.', isError: true })
+      triggerToast('비밀번호 변경 실패: 현재 비밀번호 불일치')
       return
     }
 
     if (newPinInput.length !== 4 || !/^\d+$/.test(newPinInput)) {
       setPinChangeMessage({ text: '새 비밀번호는 숫자 4자리여야 합니다.', isError: true })
+      triggerToast('비밀번호 변경 실패: 유효하지 않은 형식')
       return
     }
 
     if (newPinInput !== confirmNewPinInput) {
       setPinChangeMessage({ text: '새 비밀번호 확인이 일치하지 않습니다.', isError: true })
+      triggerToast('비밀번호 변경 실패: 새 비밀번호 확인 불일치')
       return
     }
 
     localStorage.setItem('lockPin', newPinInput)
     setPinChangeMessage({ text: '잠금 비밀번호가 성공적으로 변경되었습니다.', isError: false })
+    triggerToast('잠금 비밀번호가 안전하게 변경되었습니다.')
     setCurrentPinInput('')
     setNewPinInput('')
     setConfirmNewPinInput('')
@@ -92,7 +133,7 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
   if (!currentUser) return null
 
   return (
-    <div className="flex-1 bg-slate-50 dark:bg-zinc-955 flex flex-col h-full select-none overflow-y-auto">
+    <div className="flex-1 bg-slate-50 dark:bg-zinc-955 flex flex-col h-full select-none overflow-y-auto relative">
       
       {/* Flat Content Layout Container */}
       <div className="max-w-xl w-full mx-auto p-8 space-y-6">
@@ -172,7 +213,7 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
               </div>
               <button
                 type="button"
-                onClick={() => setDarkMode(!darkMode)}
+                onClick={handleDarkModeToggle}
                 className={`w-11 h-6 rounded-full p-0.5 transition-colors focus:outline-none shrink-0 ${
                   darkMode ? 'bg-yellow-500' : 'bg-slate-200 dark:bg-zinc-800'
                 }`}
@@ -227,7 +268,32 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
               <h2 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200">화면 잠금 및 보안 설정</h2>
             </div>
 
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200/50 dark:border-zinc-800/80 shadow-sm space-y-4">
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200/50 dark:border-zinc-800/80 shadow-sm space-y-5">
+              {/* Auto-Lock Settings Row */}
+              <div className="flex flex-col space-y-2 border-b border-slate-100 dark:border-zinc-850 pb-4">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-700 dark:text-zinc-200">자동 잠금 대기 시간</span>
+                  <span className="text-[9px] text-slate-400 mt-0.5">사용자 미활동 감지 시 자동으로 잠금 모드 활성화</span>
+                </div>
+                <select
+                  value={autoLockMinutes}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setAutoLockMinutes(val)
+                    localStorage.setItem('autoLockMinutes', val)
+                    const label = val === 'off' ? '사용 안 함' : `${val}분`
+                    triggerToast(`자동 잠금 대기시간이 ${label}으로 변경되었습니다.`)
+                  }}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-955 text-slate-750 dark:text-zinc-300 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
+                >
+                  <option value="off">사용 안 함</option>
+                  <option value="1">1분</option>
+                  <option value="5">5분</option>
+                  <option value="10">10분</option>
+                  <option value="30">30분</option>
+                </select>
+              </div>
+
               <div className="flex items-center space-x-2 text-[10px] text-amber-600 dark:text-amber-500 font-bold bg-amber-50 dark:bg-amber-955/20 p-2.5 rounded-lg border border-amber-200/50 dark:border-amber-900/40">
                 <HelpCircle size={13} />
                 <span>잠금 화면을 실행하기 위한 4자리 숫자 비밀번호를 설정하십시오.</span>
@@ -301,6 +367,14 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
         )}
 
       </div>
+
+      {/* Floating In-App Toast Alert Feedback */}
+      {toastOpen && (
+        <div className="fixed bottom-6 right-6 bg-slate-900/90 dark:bg-zinc-900/95 backdrop-blur text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-2xl border border-slate-700/50 dark:border-zinc-800/80 flex items-center space-x-2 animate-bounce-in z-50">
+          <CheckCircle size={14} className="text-kakao-yellow dark:text-yellow-400" />
+          <span>{toastText}</span>
+        </div>
+      )}
     </div>
   )
 }
