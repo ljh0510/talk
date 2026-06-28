@@ -328,7 +328,9 @@ async def seed_data():
                 is_representative=False,
                 nickname="이도 상무",
                 profile_image_url="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
-                status_message="한글 서비스 고도화 기획 중 💻"
+                status_message="한글 서비스 고도화 기획 중 💻",
+                phone_number="010-1000-0003",
+                office_phone="02-100-0003"
             )
             m_kim = models.WorkspaceMember(
                 workspace_id=w1,
@@ -336,7 +338,9 @@ async def seed_data():
                 is_representative=False,
                 nickname="유신 전무",
                 profile_image_url="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80",
-                status_message="스마트 오피스 겸직 업무 🐴"
+                status_message="스마트 오피스 겸직 업무 🐴",
+                phone_number="010-1000-0004",
+                office_phone="02-100-0004"
             )
             db.add_all([m_sejong, m_kim])
             await db.flush()
