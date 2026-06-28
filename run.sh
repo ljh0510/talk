@@ -45,6 +45,8 @@ echo "✓ Frontend verification passed."
 
 # 3. Database Seeding
 echo -e "\n[3/4] Initializing and Seeding Database..."
+echo "Ensuring PostgreSQL database 'talk' exists..."
+createdb talk 2>/dev/null || true
 cd "$BACKEND_DIR"
 "$BACKEND_DIR/venv/bin/python" "$BACKEND_DIR/seed.py"
 echo "✓ Database seeded successfully."

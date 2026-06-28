@@ -23,6 +23,7 @@ talk/
 ├── README.md              # 프로젝트 리드미 (통합 지침서)
 ├── run.sh                 # 통합 타입 검수, DB 마이그레이션 및 동시 실행 스크립트
 ├── backend/               # FastAPI 비동기 백엔드 모듈
+│   ├── .env               # 환경 변수 설정 파일 (PostgreSQL 접속 URI 포함)
 │   ├── app/
 │   │   ├── database.py    # Async SQLAlchemy 엔진 설정 및 세션 팩토리
 │   │   ├── models.py      # SQLAlchemy 데이터 모델 (User, ChatRoom, ChatRoomMember, Message)
@@ -30,7 +31,7 @@ talk/
 │   │   ├── crud.py        # 데이터베이스 질의 및 비즈니스 쿼리 (Repository 패턴)
 │   │   └── main.py        # API 엔드포인트 라우터, CORS 관리 및 WebSocket 커넥션 매니저
 │   ├── requirements.txt   # 백엔드 의존성 라이브러리 목록
-│   └── seed.py            # SQLite 데이터베이스 마이그레이션 및 데모 데이터 시딩 스크립트
+│   └── seed.py            # 데이터베이스 스키마 생성 및 데모 데이터 시딩 스크립트
 └── frontend/              # Vite React 프론트엔드 모듈
     ├── src/
     │   ├── components/
