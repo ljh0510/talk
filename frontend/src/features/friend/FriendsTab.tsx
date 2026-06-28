@@ -1,16 +1,34 @@
+import { useState } from 'react'
 import { useChatStore } from '../../store/useChatStore'
+import { ProfileCardModal } from './ProfileCardModal'
+import { ProfileEditModal } from './ProfileEditModal'
 import type { User } from '../../types'
 
 interface FriendsTabProps {
   searchQuery: string
-  onOpenProfileEdit: () => void
-  onSelectProfileUser: (user: User) => void
+  setActiveTab: (tab: 'friends' | 'chats' | 'settings' | 'more') => void
 }
 
-export function FriendsTab({ searchQuery, onOpenProfileEdit, onSelectProfileUser }: FriendsTabProps) {
-  const { currentUser, friends } = useChatStore()
+export function FriendsTab({ searchQuery, setActiveTab }: FriendsTabProps) {
+  const { currentUser, friends, chatRooms, setActiveRoomId, createChatRoom } = useChatStore()
+  
+  const [isMyProfileEditOpen, setIsMyProfileEditOpen] = useState(false)
+  const [isProfileCardOpen, setIsProfileCardOpen] = useState(false)
+  const [selectedProfileUser, setSelectedProfileUser] = useState<User | null>(null)
 
   if (!currentUser) return null
+
+  const handleStartChat = async (user: User) => {
+    setIsProfileCardOpen(false)
+    const active = chatRooms.find(r => !r.is_group && r.members.some(m => m.id === user.id))
+    if (active) {
+      setActiveRoomId(active.id)
+    } else {
+      const newId = await createChatRoom(undefined, [user.id])
+      if (newId) setActiveRoomId(newId)
+    }
+    setActiveTab('chats')
+  }
 
   const activeFriendships = friends.filter(f => f.status === 'FRIEND')
 
@@ -27,7 +45,7 @@ export function FriendsTab({ searchQuery, onOpenProfileEdit, onSelectProfileUser
     <>
       {/* My Profile Row */}
       <div 
-        onClick={onOpenProfileEdit}
+        onClick={() => setIsMyProfileEditOpen(true)}
         className="p-3 mb-3 bg-white dark:bg-zinc-900/60 rounded-xl border border-slate-200/50 dark:border-zinc-800/40 flex items-center space-x-3 cursor-pointer hover:bg-white/80 dark:hover:bg-zinc-900 transition-colors"
       >
         <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-400 dark:bg-zinc-800 flex items-center justify-center text-white font-bold shrink-0">
@@ -53,7 +71,10 @@ export function FriendsTab({ searchQuery, onOpenProfileEdit, onSelectProfileUser
         filteredFriends.map(f => (
           <div
             key={f.friend_id}
-            onClick={() => onSelectProfileUser(f.friend)}
+            onClick={() => {
+              setSelectedProfileUser(f.friend)
+              setIsProfileCardOpen(true)
+            }}
             className="p-2.5 rounded-xl hover:bg-slate-200/50 dark:hover:bg-zinc-800/30 flex items-center justify-between transition-colors group cursor-pointer"
           >
             <div className="flex items-center space-x-3 min-w-0 flex-1">
@@ -74,6 +95,18 @@ export function FriendsTab({ searchQuery, onOpenProfileEdit, onSelectProfileUser
           </div>
         ))
       )}
+
+      {/* Internal Modals */}
+      <ProfileCardModal
+        open={isProfileCardOpen}
+        onOpenChange={setIsProfileCardOpen}
+        user={selectedProfileUser}
+        onStartChat={handleStartChat}
+      />
+      <ProfileEditModal
+        open={isMyProfileEditOpen}
+        onOpenChange={setIsMyProfileEditOpen}
+      />
     </>
   )
 }
