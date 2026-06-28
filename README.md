@@ -62,13 +62,16 @@ talk/
 - 이에 대칭되는 직렬화용 Pydantic 규격을 [backend/schemas/](file:///Users/ijeonghyeon/Documents/talk/backend/schemas/) 패키지 내부에 맞춰 추가합니다.
 - 데이터 관계 필드명 불일치로 인한 API 바인딩 에러(`ResponseValidationError`)를 막기 위해, 데이터 반환 시 수동 스키마 매핑을 진행하도록 권장합니다.
 
-### 2) 비동기성 최적화
+### 2) 비동기성 최적화 및 비즈니스 격리
 - 데이터베이스 세션은 반드시 비동기 컨텍스트(`AsyncSession`)를 활용해 조회합니다.
+- DB 테이블 모델 조작 로직은 `crud/` 패키지에 격리하여 라우터(`routers/`)가 데이터베이스의 세부 명세에 직접 결합되지 않도록 합니다.
+- CORS 오리진 설정 시 `allow_credentials=True` 규칙 준수를 위해 와일드카드 정규식(`allow_origin_regex`)을 허용하지 않고, 구체적인 호스트 주소를 Whitelist 처리합니다.
 - 실시간 알림이나 메시지 전송은 WebSocket 서비스([backend/services/websocket.py](file:///Users/ijeonghyeon/Documents/talk/backend/services/websocket.py))와 `ConnectionManager`를 통해 브로드캐스트합니다.
 
 ### 3) 프론트엔드 상태 연동 및 UI
 - UI 리스트 컴포넌트는 포커스 및 키보드 접근성 확보를 위해 Radix UI 스크롤 컴포넌트([ScrollArea.tsx](file:///Users/ijeonghyeon/Documents/talk/frontend/src/components/ui/ScrollArea.tsx))를 이용해 구현합니다.
-- 상태 변경 시 리스트를 최신 메시지 순으로 실시간 재정렬하도록 Zustand 스토어([useChatStore.ts](file:///Users/ijeonghyeon/Documents/talk/frontend/src/store/useChatStore.ts))에 변경 사항을 정교화합니다.
+- Zustand 스토어([useChatStore.ts](file:///Users/ijeonghyeon/Documents/talk/frontend/src/store/useChatStore.ts))에서 WebSocket 수신 즉시 대화방 목록을 최상단으로 실시간 재정렬하도록 최적화합니다.
+- 모달 디자인 시 `DialogHeader` 하단 실선 테두리 및 `DialogTitle`(`text-sm font-extrabold`), `DialogDescription`(`text-[11px] text-slate-400`) 스타일 규격을 일관되게 보존하기 위해 [Dialog.tsx](file:///Users/ijeonghyeon/Documents/talk/frontend/src/components/ui/Dialog.tsx) 기본값에 이를 기본 적용하였습니다.
 
 ---
 

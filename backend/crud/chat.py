@@ -5,125 +5,183 @@ from sqlalchemy.orm import selectinload, joinedload
 import models
 import schemas
 
+from datetime import datetime, timezone
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, and_
+from sqlalchemy.orm import selectinload
+import models
+import schemas
+
+async def check_existing_direct_room(db: AsyncSession, u1: int, u2: int, workspace_id: int) -> int | None:
+    subq = (
+        select(models.ChatRoomMember.room_id)
+        .join(models.ChatRoom, models.ChatRoom.id == models.ChatRoomMember.room_id)
+        .filter(models.ChatRoom.is_group == False)
+        .filter(models.ChatRoom.workspace_id == workspace_id)
+        .filter(models.ChatRoomMember.user_id.in_([u1, u2]))
+        .group_by(models.ChatRoomMember.room_id)
+        .having(func.count(models.ChatRoomMember.user_id) == 2)
+    )
+    result = await db.execute(subq)
+    return result.scalar()
+
+async def verify_users_exist(db: AsyncSession, user_ids: list[int]) -> bool:
+    member_check = await db.execute(select(models.User).filter(models.User.id.in_(user_ids)))
+    db_users = member_check.scalars().all()
+    return len(db_users) == len(user_ids)
+
 async def create_chat_room(db: AsyncSession, room_in: schemas.ChatRoomCreate, creator_id: int, workspace_id: int):
-    member_ids = list(set(room_in.member_ids + [creator_id]))
-    db_room = models.ChatRoom(
+    all_member_ids = list(set(room_in.member_ids + [creator_id]))
+    
+    is_group = len(all_member_ids) > 2 or room_in.name is not None
+    
+    # Check for existing direct 1:1 room
+    if not is_group and len(all_member_ids) == 2:
+        u1, u2 = all_member_ids[0], all_member_ids[1]
+        existing_room_id = await check_existing_direct_room(db, u1, u2, workspace_id)
+        if existing_room_id:
+            room = await get_chat_room_detail(db, existing_room_id)
+            for mem in room.room_members:
+                if mem.user_id == creator_id:
+                    mem.last_read_at = datetime.now(timezone.utc)
+                    db.add(mem)
+            await db.commit()
+            return room
+            
+    # Create new
+    new_room = models.ChatRoom(
         workspace_id=workspace_id,
         name=room_in.name,
-        is_group=room_in.is_group or len(member_ids) > 2
+        is_group=is_group
     )
-    db.add(db_room)
-    await db.flush()  # get db_room.id
-
-    for member_id in member_ids:
-        user_result = await db.execute(select(models.User).where(models.User.id == member_id))
-        user = user_result.scalars().first()
-        if user:
-            member_assoc = models.ChatRoomMember(
-                room_id=db_room.id,
-                user_id=member_id,
-                workspace_id=workspace_id
-            )
-            db.add(member_assoc)
-            
+    db.add(new_room)
+    await db.flush()
+    
+    for user_id in all_member_ids:
+        member = models.ChatRoomMember(
+            room_id=new_room.id,
+            user_id=user_id,
+            workspace_id=workspace_id,
+            last_read_at=datetime.now(timezone.utc)
+        )
+        db.add(member)
+        
     await db.commit()
-    room_detail = await get_chat_room_detail(db, db_room.id)
-    return room_detail
+    return await get_chat_room_detail(db, new_room.id)
 
 async def get_chat_room_detail(db: AsyncSession, room_id: int):
     result = await db.execute(
         select(models.ChatRoom)
         .options(
-            selectinload(models.ChatRoom.room_members).selectinload(models.ChatRoomMember.user),
-            selectinload(models.ChatRoom.messages).selectinload(models.Message.sender)
+            selectinload(models.ChatRoom.room_members)
+            .selectinload(models.ChatRoomMember.user)
+            .options(
+                selectinload(models.User.workspace_memberships).selectinload(models.WorkspaceMember.workspace),
+                selectinload(models.User.department_memberships).options(
+                    selectinload(models.DepartmentMember.department).selectinload(models.Department.manager),
+                    selectinload(models.DepartmentMember.position),
+                    selectinload(models.DepartmentMember.duty)
+                )
+            )
         )
         .where(models.ChatRoom.id == room_id)
     )
     return result.scalars().first()
 
-async def get_user_chat_rooms(db: AsyncSession, user_id: int, workspace_id: int):
-    latest_msg_sub = (
-        select(
-            models.Message.room_id,
-            func.max(models.Message.id).label("max_id")
-        )
-        .group_by(models.Message.room_id)
-        .subquery()
-    )
-
-    stmt = (
-        select(
-            models.ChatRoom,
-            func.coalesce(func.count(models.Message.id), 0).label("unread_count"),
-            latest_msg_sub.c.max_id.label("latest_message_id")
-        )
-        .join(
-            models.ChatRoomMember,
-            and_(
-                models.ChatRoomMember.room_id == models.ChatRoom.id,
-                models.ChatRoomMember.user_id == user_id
-            )
-        )
-        .outerjoin(
-            models.Message,
-            and_(
-                models.Message.room_id == models.ChatRoom.id,
-                models.Message.created_at > models.ChatRoomMember.last_read_at
-            )
-        )
-        .outerjoin(
-            latest_msg_sub,
-            latest_msg_sub.c.room_id == models.ChatRoom.id
-        )
-        .where(models.ChatRoom.workspace_id == workspace_id)
-        .group_by(models.ChatRoom.id, latest_msg_sub.c.max_id)
+async def get_room_messages(db: AsyncSession, room_id: int):
+    msg_query = (
+        select(models.Message)
+        .filter(models.Message.room_id == room_id)
+        .order_by(models.Message.created_at.asc())
         .options(
-            selectinload(models.ChatRoom.room_members).selectinload(models.ChatRoomMember.user)
+            selectinload(models.Message.sender).options(
+                selectinload(models.User.workspace_memberships).selectinload(models.WorkspaceMember.workspace),
+                selectinload(models.User.department_memberships).options(
+                    selectinload(models.DepartmentMember.department).selectinload(models.Department.manager),
+                    selectinload(models.DepartmentMember.position),
+                    selectinload(models.DepartmentMember.duty)
+                )
+            )
+        )
+    )
+    msg_res = await db.execute(msg_query)
+    return msg_res.scalars().all()
+
+async def get_user_chat_rooms(db: AsyncSession, user_id: int, workspace_id: int):
+    query = (
+        select(models.ChatRoom)
+        .join(models.ChatRoomMember, models.ChatRoom.id == models.ChatRoomMember.room_id)
+        .filter(
+            and_(
+                models.ChatRoomMember.user_id == user_id,
+                models.ChatRoom.workspace_id == workspace_id
+            )
+        )
+        .options(
+            selectinload(models.ChatRoom.room_members)
+            .selectinload(models.ChatRoomMember.user)
+            .options(
+                selectinload(models.User.workspace_memberships).selectinload(models.WorkspaceMember.workspace),
+                selectinload(models.User.department_memberships).options(
+                    selectinload(models.DepartmentMember.department).selectinload(models.Department.manager),
+                    selectinload(models.DepartmentMember.position),
+                    selectinload(models.DepartmentMember.duty)
+                )
+            )
         )
     )
     
-    result = await db.execute(stmt)
-    rows = result.all()
+    result = await db.execute(query)
+    rooms = result.scalars().all()
     
-    if not rows:
-        return []
-        
-    latest_msg_ids = [row.latest_message_id for row in rows if row.latest_message_id is not None]
-    
-    latest_messages = {}
-    if latest_msg_ids:
-        msg_stmt = (
+    detailed_rooms = []
+    for room in rooms:
+        msg_query = (
             select(models.Message)
-            .options(joinedload(models.Message.sender))
-            .where(models.Message.id.in_(latest_msg_ids))
+            .filter(models.Message.room_id == room.id)
+            .order_by(models.Message.created_at.desc())
+            .options(
+                selectinload(models.Message.sender).options(
+                    selectinload(models.User.workspace_memberships).selectinload(models.WorkspaceMember.workspace),
+                    selectinload(models.User.department_memberships).options(
+                        selectinload(models.DepartmentMember.department).selectinload(models.Department.manager),
+                        selectinload(models.DepartmentMember.position),
+                        selectinload(models.DepartmentMember.duty)
+                    )
+                )
+            )
+            .limit(1)
         )
-        msg_result = await db.execute(msg_stmt)
-        latest_messages = {msg.id: msg for msg in msg_result.scalars().all()}
+        msg_result = await db.execute(msg_query)
+        last_msg = msg_result.scalars().first()
         
-    response_rooms = []
-    for room, unread_count, latest_message_id in rows:
-        members = [rm.user for rm in room.room_members]
-        latest_msg = latest_messages.get(latest_message_id) if latest_message_id else None
+        user_membership = next(m for m in room.room_members if m.user_id == user_id)
+        last_read_at = user_membership.last_read_at
         
-        response_rooms.append(
-            schemas.ChatRoomListResponse(
-                id=room.id,
-                name=room.name,
-                is_group=room.is_group,
-                created_at=room.created_at,
-                members=[schemas.UserResponse.model_validate(m) for m in members],
-                latest_message=schemas.MessageResponse.model_validate(latest_msg) if latest_msg else None,
-                unread_count=unread_count
+        unread_query = (
+            select(func.count(models.Message.id))
+            .filter(
+                models.Message.room_id == room.id,
+                models.Message.created_at > last_read_at,
+                models.Message.sender_id != user_id
             )
         )
+        unread_res = await db.execute(unread_query)
+        unread_count = unread_res.scalar() or 0
         
-    def get_sort_key(room_resp):
-        if room_resp.latest_message:
-            return room_resp.latest_message.created_at
-        return room_resp.created_at
+        detailed_rooms.append({
+            "room": room,
+            "latest_message": last_msg,
+            "unread_count": unread_count
+        })
         
-    response_rooms.sort(key=get_sort_key, reverse=True)
-    return response_rooms
+    def get_sort_key(room_dict):
+        if room_dict["latest_message"]:
+            return room_dict["latest_message"].created_at
+        return room_dict["room"].created_at
+        
+    detailed_rooms.sort(key=get_sort_key, reverse=True)
+    return detailed_rooms
 
 async def create_message(db: AsyncSession, room_id: int, sender_id: int, content: str, message_type: str = "TEXT"):
     db_msg = models.Message(
@@ -133,18 +191,26 @@ async def create_message(db: AsyncSession, room_id: int, sender_id: int, content
         message_type=message_type
     )
     db.add(db_msg)
-    await db.commit()
-    await db.refresh(db_msg)
+    await db.flush()
     
     stmt = (
         select(models.Message)
-        .options(joinedload(models.Message.sender))
+        .options(
+            selectinload(models.Message.sender).options(
+                selectinload(models.User.workspace_memberships).selectinload(models.WorkspaceMember.workspace),
+                selectinload(models.User.department_memberships).options(
+                    selectinload(models.DepartmentMember.department).selectinload(models.Department.manager),
+                    selectinload(models.DepartmentMember.position),
+                    selectinload(models.DepartmentMember.duty)
+                )
+            )
+        )
         .where(models.Message.id == db_msg.id)
     )
     result = await db.execute(stmt)
     return result.scalars().first()
 
-async def update_last_read(db: AsyncSession, room_id: int, user_id: int):
+async def update_last_read(db: AsyncSession, room_id: int, user_id: int) -> models.ChatRoomMember | None:
     stmt = (
         select(models.ChatRoomMember)
         .where(
@@ -158,9 +224,10 @@ async def update_last_read(db: AsyncSession, room_id: int, user_id: int):
     member = result.scalars().first()
     if member:
         member.last_read_at = datetime.now(timezone.utc)
+        db.add(member)
         await db.commit()
-        return True
-    return False
+        return member
+    return None
 
 async def verify_room_membership(db: AsyncSession, room_id: int, user_id: int) -> bool:
     result = await db.execute(

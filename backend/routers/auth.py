@@ -14,16 +14,14 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     # Check if email exists
-    result_email = await db.execute(select(User).filter(User.email == user_in.email))
-    if result_email.scalars().first():
+    if await crud.get_user_by_email(db, user_in.email):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
     
     # Check if username exists (warn but do not restrict as strictly if requested)
-    result_username = await db.execute(select(User).filter(User.username == user_in.username))
-    if result_username.scalars().first():
+    if await crud.get_user_by_username(db, user_in.username):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"

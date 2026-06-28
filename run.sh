@@ -25,7 +25,7 @@ echo "Checking/Installing backend dependencies..."
 
 # Run a compile check on python files to ensure no syntax errors
 echo "Running Python syntax compilation checks..."
-"$BACKEND_DIR/venv/bin/python" -m compileall -q "$BACKEND_DIR/app"
+"$BACKEND_DIR/venv/bin/python" -m compileall -q -x "\.venv|venv|__pycache__" "$BACKEND_DIR"
 
 echo "✓ Backend verification passed."
 

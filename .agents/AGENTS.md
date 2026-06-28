@@ -62,8 +62,8 @@ talk/
 ### 1) Backend (FastAPI, SQLAlchemy)
 - **비동기성(Asynchrony) 보장**: 모든 DB 쿼리 및 라우터는 비동기(`async/await`) 처리와 `AsyncSession` 의존성 주입을 필수로 활용해야 합니다.
 - **데이터베이스 이중화 전략**: 로컬 개발 시에는 SQLite(`aiosqlite`), 실운영 환경에서는 PostgreSQL을 교체 가능하도록 구조화해야 합니다. DB 종속적인 방언(Dialect)을 지양하고 표준 ANSI SQL과 SQLAlchemy ORM 빌더만을 사용하십시오.
-- **비즈니스 격리**: DB 테이블 모델 조작 로직은 `crud/` 패키지에 격리하여 라우터(`routers/`)가 데이터베이스의 세부 명세에 결합되지 않도록 합니다.
-- **CORS 설정 주의**: 브라우저 보안에 따라 `allow_credentials=True`인 경우 `allow_origins=["*"]`를 사용할 수 없습니다. 오리진 명세 시 `allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"]`와 같이 구체적인 호스트명을 사용하십시오.
+- **비즈니스 격리**: DB 테이블 모델 조작 로직은 `crud/` 패키지에 격리하여 라우터(`routers/`)가 데이터베이스의 세부 명세에 결합되지 않도록 합니다. (예: `auth.py`, `chats.py` 등 모든 라우터는 직접적인 ORM 쿼리 대신 `crud/` 모듈 헬퍼 호출을 의무화함)
+- **CORS 설정 주의**: 브라우저 보안에 따라 `allow_credentials=True`인 경우 `allow_origins=["*"]`를 사용할 수 없습니다. 오리진 명세 시 `allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"]`와 같이 구체적인 호스트명을 사용하십시오. (와일드카드성 정규식 `allow_origin_regex` 사용 역시 금지됩니다.)
 
 ### 2) Frontend (Vite, React, Radix UI, Tailwind CSS v4, Zustand)
 - **스크롤 접근성**: 대화 목록, 멤버 목록 등 긴 리스트 스크롤은 Radix UI ScrollArea Primitive를 래핑한 [ScrollArea.tsx](file:///Users/ijeonghyeon/Documents/talk/frontend/src/components/ui/ScrollArea.tsx)를 필수 적용하여 접근성 표준을 준수합니다.
@@ -81,7 +81,7 @@ talk/
 ./run.sh
 ```
 
-- **백엔드 빌드 검사**: Python 코드가 문법적으로 에러가 없는지 `compileall`을 사용하여 사전에 로컬 컴파일을 시도합니다.
+- **백엔드 빌드 검사**: Python 코드가 문법적으로 에러가 없는지 `compileall`을 사용하여 사전에 로컬 컴파일을 시도합니다. (실행 시 `.venv` 및 `venv` 폴더는 스킵하도록 예외 필터 처리됨)
 - **프론트엔드 타입 검사**: `npm run build`를 구동하여 TypeScript 컴파일 에러(`tsc --noEmit`)가 없는지 빌드를 확인합니다.
 - **서버 정리**: 로컬 포트 충돌을 막기 위해 서버를 구동하기 전 기존 프로세스를 정상적으로 해제한 상태로 검수를 진행하십시오.
 
@@ -98,6 +98,7 @@ talk/
 - **표준 구조**:
   - `DialogHeader` 에는 하단 실선 테두리(`border-b border-slate-100 dark:border-zinc-800 pb-3`)를 부착합니다.
   - `DialogTitle` 은 `text-sm font-extrabold` 크기를, `DialogDescription` 은 `text-[11px] text-slate-400` 스타일을 유지합니다.
+  - *시스템 강제화*: 개별 모달 소스코드에 위 스타일을 중복하여 하드코딩하지 않도록 [Dialog.tsx](file:///Users/ijeonghyeon/Documents/talk/frontend/src/components/ui/Dialog.tsx) 내의 래퍼 컴포넌트 기본값에 본 스타일 사양이 기본 적용되어 있습니다.
 - **접근성 수칙**: Radix UI Dialog Primitive의 스크린 리더 요건을 충족하도록 모든 모달 다이얼로그 본문에 타이틀과 설명문을 적합하게 배치하거나 `sr-only` 래핑 처리합니다.
 - **스크롤 컴포넌트**: 긴 목록 렌더링 시 브라우저 기본 스크롤바 대신, 웹 표준 접근성 표준이 가미된 `ScrollArea.tsx` 컴포넌트를 필수 적용하여 균일한 비주얼을 확보하십시오.
 
