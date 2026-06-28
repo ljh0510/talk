@@ -28,6 +28,8 @@ class UserCreate(UserBase):
     duty: Optional[str] = None
     duty_code: Optional[str] = None
     duty_sort_order: Optional[int] = None
+    phone_number: Optional[str] = None
+    office_phone: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr = Field(...)
@@ -54,6 +56,8 @@ class UserUpdate(BaseModel):
     duty: Optional[str] = None
     duty_code: Optional[str] = None
     duty_sort_order: Optional[int] = None
+    phone_number: Optional[str] = None
+    office_phone: Optional[str] = None
 
 # Structured representations for enterprise memberships
 class PositionResponse(BaseModel):
@@ -90,6 +94,8 @@ class WorkspaceMembershipResponse(BaseModel):
     nickname: str
     profile_image_url: Optional[str] = None
     status_message: Optional[str] = None
+    phone_number: Optional[str] = None
+    office_phone: Optional[str] = None
     is_representative: bool
     department: Optional[DepartmentResponse] = None
     model_config = ConfigDict(from_attributes=True)

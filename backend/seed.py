@@ -48,7 +48,9 @@ async def seed_data():
             position_sort_order=4,
             duty="풀스택 개발자",
             duty_code="DUTY-FULL",
-            duty_sort_order=3
+            duty_sort_order=3,
+            phone_number="010-1000-0001",
+            office_phone="02-100-0001"
         )
         u2 = schemas.UserCreate(
             username="lee",
@@ -71,7 +73,9 @@ async def seed_data():
             position_sort_order=2,
             duty="총괄 사령관",
             duty_code="DUTY-GEN",
-            duty_sort_order=1
+            duty_sort_order=1,
+            phone_number="010-1000-0002",
+            office_phone="02-100-0002"
         )
         u3 = schemas.UserCreate(
             username="sejong",
@@ -94,7 +98,9 @@ async def seed_data():
             position_sort_order=1,
             duty="문화 콘텐츠 기획",
             duty_code="DUTY-DIR",
-            duty_sort_order=1
+            duty_sort_order=1,
+            phone_number="010-1000-0003",
+            office_phone="02-100-0003"
         )
         u4 = schemas.UserCreate(
             username="kim",
@@ -117,7 +123,9 @@ async def seed_data():
             position_sort_order=3,
             duty="승마 훈련 코치",
             duty_code="DUTY-COACH",
-            duty_sort_order=2
+            duty_sort_order=2,
+            phone_number="010-1000-0004",
+            office_phone="02-100-0004"
         )
         
         u5 = schemas.UserCreate(
@@ -141,7 +149,9 @@ async def seed_data():
             position_sort_order=1,
             duty="국정 감사 및 재무",
             duty_code="DUTY-FIN",
-            duty_sort_order=10
+            duty_sort_order=10,
+            phone_number="010-1000-0005",
+            office_phone="02-100-0005"
         )
         
         u7 = schemas.UserCreate(
@@ -165,7 +175,9 @@ async def seed_data():
             position_sort_order=3,
             duty="인사 기획 및 노무",
             duty_code="DUTY-HR",
-            duty_sort_order=5
+            duty_sort_order=5,
+            phone_number="010-1000-0007",
+            office_phone="02-100-0007"
         )
 
         u8 = schemas.UserCreate(
@@ -189,7 +201,9 @@ async def seed_data():
             position_sort_order=2,
             duty="엔진 설계 개발",
             duty_code="DUTY-RD",
-            duty_sort_order=6
+            duty_sort_order=6,
+            phone_number="010-1000-0008",
+            office_phone="02-100-0008"
         )
 
         u9 = schemas.UserCreate(
@@ -213,7 +227,9 @@ async def seed_data():
             position_sort_order=4,
             duty="사내 헬스 케어",
             duty_code="DUTY-MED",
-            duty_sort_order=7
+            duty_sort_order=7,
+            phone_number="010-1000-0009",
+            office_phone="02-100-0009"
         )
 
         u10 = schemas.UserCreate(
@@ -237,7 +253,9 @@ async def seed_data():
             position_sort_order=5,
             duty="보건 약제 기획",
             duty_code="DUTY-MED",
-            duty_sort_order=8
+            duty_sort_order=8,
+            phone_number="010-1000-0010",
+            office_phone="02-100-0010"
         )
 
         # User 6: Saimdang in WKSP-HK (Hangul Cultural Foundation)
@@ -262,7 +280,9 @@ async def seed_data():
             position_sort_order=2,
             duty="한글 서체 미술 기획",
             duty_code="DUTY-ART",
-            duty_sort_order=5
+            duty_sort_order=5,
+            phone_number="010-1000-0006",
+            office_phone="02-100-0006"
         )
         
         db_u1 = await crud.create_user(db, u1)

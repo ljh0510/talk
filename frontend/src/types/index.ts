@@ -32,6 +32,8 @@ export interface WorkspaceMembership {
   nickname: string
   profile_image_url?: string
   status_message?: string
+  phone_number?: string
+  office_phone?: string
   is_representative: boolean
   department?: DepartmentInfo
 }
@@ -65,6 +67,8 @@ export interface User {
   duty?: string
   duty_code?: string
   duty_sort_order?: number
+  phone_number?: string
+  office_phone?: string
 }
 
 export interface MemberRelation {

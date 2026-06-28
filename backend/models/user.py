@@ -56,6 +56,8 @@ class WorkspaceMember(Base):
     nickname: Mapped[str] = mapped_column(String(50), nullable=False)
     profile_image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status_message: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    phone_number: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    office_phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
     
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

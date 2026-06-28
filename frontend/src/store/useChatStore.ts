@@ -14,6 +14,8 @@ export function normalizeUser(user: any): User {
     nickname: active?.nickname || user.username,
     profile_image_url: active?.profile_image_url || undefined,
     status_message: active?.status_message || undefined,
+    phone_number: active?.phone_number || undefined,
+    office_phone: active?.office_phone || undefined,
     workspace: active?.workspace_name || undefined,
     workspace_code: active?.workspace_code || undefined,
     workspace_domain: active?.workspace_domain || undefined,
