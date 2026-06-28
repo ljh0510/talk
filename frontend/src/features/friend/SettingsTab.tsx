@@ -39,7 +39,7 @@ export function SettingsTab({
                   ? 'bg-white dark:bg-zinc-800/80 border-slate-300/40 dark:border-zinc-700/60 shadow-sm'
                   : 'hover:bg-slate-200/50 dark:hover:bg-zinc-900/40 border-transparent'}`}
             >
-              <div className={`p-2 rounded-lg shrink-0 ${isActive ? 'bg-kakao-yellow text-kakao-brown' : 'bg-slate-200 dark:bg-zinc-800 text-slate-500'}`}>
+              <div className={`p-2 rounded-lg shrink-0 ${isActive ? 'bg-primary-accent text-primary-accent-text' : 'bg-slate-200 dark:bg-zinc-800 text-slate-500'}`}>
                 <Icon size={16} />
               </div>
               <div className="min-w-0 flex-1">

@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useChatStore } from '../../store/useChatStore'
-import { Users, MessageCircle, Bell, BellOff, Settings, XSquare, LogOut } from 'lucide-react'
+import { Users, MessageCircle, Bell, BellOff, Settings, LogOut, XSquare } from 'lucide-react'
 
 interface SidebarProps {
   activeTab: 'friends' | 'chats' | 'settings'
@@ -21,6 +21,21 @@ export function Sidebar({
     return localStorage.getItem('notificationsEnabled') !== 'false'
   })
 
+  // Grouped SignOut popup menu state
+  const [showSignOutMenu, setShowSignOutMenu] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowSignOutMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   if (!currentUser) return null
 
   const unreadTotal = chatRooms.reduce((acc, r) => acc + r.unread_count, 0)
@@ -40,7 +55,7 @@ export function Sidebar({
           onClick={() => setActiveTab('friends')}
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${
             activeTab === 'friends'
-              ? 'bg-white dark:bg-zinc-800 text-kakao-brown dark:text-yellow-400 shadow'
+              ? 'bg-primary-accent text-primary-accent-text shadow'
               : 'text-slate-500 hover:bg-slate-300/50 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-200'
           }`}
           title="친구 목록"
@@ -53,7 +68,7 @@ export function Sidebar({
           onClick={() => setActiveTab('chats')}
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${
             activeTab === 'chats'
-              ? 'bg-white dark:bg-zinc-800 text-kakao-brown dark:text-yellow-400 shadow'
+              ? 'bg-primary-accent text-primary-accent-text shadow'
               : 'text-slate-500 hover:bg-slate-300/50 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-200'
           }`}
           title="대화방 목록"
@@ -71,7 +86,7 @@ export function Sidebar({
           onClick={() => setActiveTab('settings')}
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${
             activeTab === 'settings'
-              ? 'bg-white dark:bg-zinc-800 text-kakao-brown dark:text-yellow-400 shadow'
+              ? 'bg-primary-accent text-primary-accent-text shadow'
               : 'text-slate-500 hover:bg-slate-300/50 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-200'
           }`}
           title="환경설정"
@@ -95,23 +110,45 @@ export function Sidebar({
           {notificationsEnabled ? <Bell size={20} /> : <BellOff size={20} />}
         </button>
 
-        {/* Fast LogOut Button */}
-        <button
-          onClick={onTriggerLogout}
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 hover:bg-red-50 dark:hover:bg-red-955/20 hover:text-red-650 transition-colors"
-          title="로그아웃"
-        >
-          <LogOut size={20} />
-        </button>
+        {/* LogOut & Exit Trigger Menu Container */}
+        <div className="relative w-full flex justify-center" ref={dropdownRef}>
+          <button
+            onClick={() => setShowSignOutMenu(!showSignOutMenu)}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 hover:bg-red-50 dark:hover:bg-red-955/20 hover:text-red-650 transition-colors ${
+              showSignOutMenu ? 'bg-red-50 dark:bg-red-955/20 text-red-600' : ''
+            }`}
+            title="종료 및 로그아웃"
+          >
+            <LogOut size={20} />
+          </button>
 
-        {/* Exit Button */}
-        <button
-          onClick={onTriggerExit}
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 hover:bg-red-50 dark:hover:bg-red-955/20 hover:text-red-650 transition-colors"
-          title="종료"
-        >
-          <XSquare size={20} />
-        </button>
+          {/* Grouped SignOut Mini Popup Menu */}
+          {showSignOutMenu && (
+            <div className="absolute bottom-12 left-14 w-28 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-850 rounded-xl shadow-2xl py-1.5 z-55 flex flex-col scale-in-center">
+              <button
+                onClick={() => {
+                  setShowSignOutMenu(false)
+                  onTriggerLogout()
+                }}
+                className="w-full px-3 py-2 text-left text-[11px] font-bold text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-900 flex items-center space-x-2"
+              >
+                <LogOut size={13} className="text-slate-500" />
+                <span>로그아웃</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowSignOutMenu(false)
+                  onTriggerExit()
+                }}
+                className="w-full px-3 py-2 text-left text-[11px] font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-955/20 flex items-center space-x-2"
+              >
+                <XSquare size={13} className="text-red-500" />
+                <span>종료</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

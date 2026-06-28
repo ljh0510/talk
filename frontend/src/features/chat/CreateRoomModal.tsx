@@ -72,7 +72,7 @@ export function CreateRoomModal({ open, onOpenChange, onSuccess }: CreateRoomMod
 
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">초대할 대화상대 선택 ({selectedUserIds.length}명)</label>
-            <ScrollArea className="h-[150px] border border-slate-200 dark:border-zinc-800 rounded-lg p-2 bg-slate-50 dark:bg-zinc-955">
+            <ScrollArea className="h-[150px] border border-slate-200 dark:border-zinc-800 rounded-lg p-2 bg-slate-50 dark:bg-zinc-950">
               <div className="space-y-1">
                 {users.map(user => {
                   const isChecked = selectedUserIds.includes(user.id)

@@ -5,6 +5,33 @@ import { Sun, Moon, Bell, BellOff, Lock, Palette, HelpCircle, CheckCircle, Info 
 
 type SubTabType = 'general' | 'style' | 'security'
 
+// Helper to check contrast and generate light/dark text color
+function getContrastColor(hex: string): string {
+  const cleanHex = hex.replace('#', '')
+  if (cleanHex.length !== 6) return '#ffffff'
+  const r = parseInt(cleanHex.substring(0, 2), 16)
+  const g = parseInt(cleanHex.substring(2, 4), 16)
+  const b = parseInt(cleanHex.substring(4, 6), 16)
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000
+  return yiq >= 180 ? '#3c1e1e' : '#ffffff'
+}
+
+// Helper to generate a slightly darker/shade hex for hover effect
+function getHoverColor(hex: string): string {
+  const cleanHex = hex.replace('#', '')
+  if (cleanHex.length !== 6) return hex
+  let r = parseInt(cleanHex.substring(0, 2), 16)
+  let g = parseInt(cleanHex.substring(2, 4), 16)
+  let b = parseInt(cleanHex.substring(4, 6), 16)
+  r = Math.max(0, Math.floor(r * 0.85))
+  g = Math.max(0, Math.floor(g * 0.85))
+  b = Math.max(0, Math.floor(b * 0.85))
+  const rHex = r.toString(16).padStart(2, '0')
+  const gHex = g.toString(16).padStart(2, '0')
+  const bHex = b.toString(16).padStart(2, '0')
+  return `#${rHex}${gHex}${bHex}`
+}
+
 interface SettingsDetailProps {
   activeSubTab: SubTabType
   darkMode: boolean
@@ -21,7 +48,12 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
 
   // Style configurations
   const [accentColor, setAccentColor] = useState(() => {
-    return localStorage.getItem('accentColor') || 'yellow'
+    let color = localStorage.getItem('accentColor') || '#fee500'
+    if (color === 'yellow') color = '#fee500'
+    else if (color === 'blue') color = '#1d4ed8'
+    else if (color === 'emerald') color = '#059669'
+    else if (color === 'purple') color = '#7c3aed'
+    return color
   })
 
   // Security configurations
@@ -53,7 +85,14 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
 
   useEffect(() => {
     setNotificationsEnabled(localStorage.getItem('notificationsEnabled') !== 'false')
-    setAccentColor(localStorage.getItem('accentColor') || 'yellow')
+    
+    let color = localStorage.getItem('accentColor') || '#fee500'
+    if (color === 'yellow') color = '#fee500'
+    else if (color === 'blue') color = '#1d4ed8'
+    else if (color === 'emerald') color = '#059669'
+    else if (color === 'purple') color = '#7c3aed'
+    setAccentColor(color)
+    
     setAutoLockMinutes(localStorage.getItem('autoLockMinutes') || 'off')
     setCurrentPinInput('')
     setNewPinInput('')
@@ -74,28 +113,19 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
     triggerToast(nextMode ? '다크 모드가 적용되었습니다.' : '라이트 모드가 적용되었습니다.')
   }
 
-  const handleAccentColorChange = (color: string) => {
-    setAccentColor(color)
-    localStorage.setItem('accentColor', color)
+  const handleAccentColorChange = (hexColor: string) => {
+    setAccentColor(hexColor)
+    localStorage.setItem('accentColor', hexColor)
+    
+    const hoverColor = getHoverColor(hexColor)
+    const textColor = getContrastColor(hexColor)
     
     const root = document.documentElement
-    if (color === 'yellow') {
-      root.style.setProperty('--primary-accent', '#fee500')
-    } else if (color === 'blue') {
-      root.style.setProperty('--primary-accent', '#1d4ed8')
-    } else if (color === 'emerald') {
-      root.style.setProperty('--primary-accent', '#059669')
-    } else if (color === 'purple') {
-      root.style.setProperty('--primary-accent', '#7c3aed')
-    }
+    root.style.setProperty('--primary-accent', hexColor)
+    root.style.setProperty('--primary-accent-hover', hoverColor)
+    root.style.setProperty('--primary-accent-text', textColor)
 
-    const colorLabels: Record<string, string> = {
-      yellow: '카카오 옐로우',
-      blue: '클래식 블루',
-      emerald: '에메랄드 그린',
-      purple: '딥 퍼플'
-    }
-    triggerToast(`브랜드 컬러가 ${colorLabels[color] || color}로 변경되었습니다.`)
+    triggerToast(`브랜드 컬러가 변경되었습니다: ${hexColor}`)
   }
 
   const handlePinChangeSubmit = (e: React.FormEvent) => {
@@ -132,8 +162,19 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
 
   if (!currentUser) return null
 
+  const presetColors = [
+    { hex: '#fee500', title: '카카오' },
+    { hex: '#1d4ed8', title: '클래식 블루' },
+    { hex: '#059669', title: '에메랄드 그린' },
+    { hex: '#7c3aed', title: '딥 퍼플' },
+    { hex: '#0ea5e9', title: '스카이 블루' },
+    { hex: '#f43f5e', title: '로즈 핑크' },
+    { hex: '#f97316', title: '애플 오렌지' },
+    { hex: '#4b5563', title: '차콜 그레이' },
+  ]
+
   return (
-    <div className="flex-1 bg-slate-50 dark:bg-zinc-955 flex flex-col h-full select-none overflow-y-auto relative">
+    <div className="flex-1 bg-slate-50 dark:bg-zinc-950 flex flex-col h-full select-none overflow-y-auto relative">
       
       {/* Flat Content Layout Container */}
       <div className="max-w-xl w-full mx-auto p-8 space-y-6">
@@ -149,7 +190,7 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
 
             {/* Account Information Details */}
             <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/50 dark:border-zinc-800/80 flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-400 dark:bg-zinc-850 flex items-center justify-center text-white text-sm font-bold shadow shrink-0">
+              <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-400 dark:bg-zinc-855 flex items-center justify-center text-white text-sm font-bold shadow shrink-0">
                 {currentUser.profile_image_url ? (
                   <img src={currentUser.profile_image_url} alt={currentUser.nickname} className="w-full h-full object-cover" />
                 ) : (
@@ -180,7 +221,7 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
                 type="button"
                 onClick={handleToggleNotifications}
                 className={`w-11 h-6 rounded-full p-0.5 transition-colors focus:outline-none shrink-0 ${
-                  notificationsEnabled ? 'bg-kakao-yellow' : 'bg-slate-200 dark:bg-zinc-800'
+                  notificationsEnabled ? 'bg-primary-accent' : 'bg-slate-200 dark:bg-zinc-800'
                 }`}
               >
                 <div
@@ -233,27 +274,60 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
                 <span className="text-[9px] text-slate-400 mt-0.5">인터페이스의 하이라이트 포인트 색상을 지정합니다.</span>
               </div>
               
-              <div className="flex space-x-3.5 justify-start pt-1">
-                {[
-                  { name: 'yellow', hex: '#fee500', title: '카카오' },
-                  { name: 'blue', hex: '#1d4ed8', title: '블루' },
-                  { name: 'emerald', hex: '#059669', title: '그린' },
-                  { name: 'purple', hex: '#7c3aed', title: '퍼플' },
-                ].map(colorOpt => (
+              {/* Preset Palette */}
+              <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 pt-1">
+                {presetColors.map(colorOpt => (
                   <button
-                    key={colorOpt.name}
-                    onClick={() => handleAccentColorChange(colorOpt.name)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center text-[9px] font-bold text-white shadow-md ${
-                      accentColor === colorOpt.name
+                    key={colorOpt.hex}
+                    onClick={() => handleAccentColorChange(colorOpt.hex)}
+                    className={`w-9 h-9 rounded-full border-2 transition-all flex items-center justify-center text-[9px] font-bold text-white shadow-md ${
+                      accentColor.toLowerCase() === colorOpt.hex.toLowerCase()
                         ? 'border-slate-800 dark:border-white scale-110'
                         : 'border-transparent opacity-85 hover:scale-105'
                     }`}
                     style={{ backgroundColor: colorOpt.hex }}
                     title={colorOpt.title}
                   >
-                    {accentColor === colorOpt.name ? '✓' : ''}
+                    {accentColor.toLowerCase() === colorOpt.hex.toLowerCase() ? '✓' : ''}
                   </button>
                 ))}
+              </div>
+
+              {/* Custom Color Picker Tool */}
+              <div className="border-t border-slate-100 dark:border-zinc-850 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-600 dark:text-zinc-300">나만의 컬러 커스텀</span>
+                  <span className="text-[8px] text-slate-450 mt-0.5">원하는 커스텀 색상을 컬러피커 또는 헥사코드로 입력하세요.</span>
+                </div>
+                
+                <div className="flex items-center space-x-2 shrink-0">
+                  {/* Color Picker square */}
+                  <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-slate-300 dark:border-zinc-700 shadow-inner">
+                    <input
+                      type="color"
+                      value={accentColor}
+                      onChange={(e) => handleAccentColorChange(e.target.value)}
+                      className="absolute inset-0 w-full h-full scale-150 cursor-pointer p-0 border-0"
+                    />
+                  </div>
+                  {/* Hex Text input */}
+                  <input
+                    type="text"
+                    maxLength={7}
+                    value={accentColor}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      if (val.startsWith('#') && val.length <= 7) {
+                        setAccentColor(val)
+                        if (val.length === 7) {
+                          handleAccentColorChange(val)
+                        }
+                      }
+                    }}
+                    placeholder="#ffffff"
+                    className="w-20 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-200 text-[10px] font-mono focus:outline-none"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -270,7 +344,7 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
 
             <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200/50 dark:border-zinc-800/80 shadow-sm space-y-5">
               {/* Auto-Lock Settings Row */}
-              <div className="flex flex-col space-y-2 border-b border-slate-100 dark:border-zinc-850 pb-4">
+              <div className="flex flex-col space-y-2 border-b border-slate-100 dark:border-zinc-855 pb-4">
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-slate-700 dark:text-zinc-200">자동 잠금 대기 시간</span>
                   <span className="text-[9px] text-slate-400 mt-0.5">사용자 미활동 감지 시 자동으로 잠금 모드 활성화</span>
@@ -284,7 +358,7 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
                     const label = val === 'off' ? '사용 안 함' : `${val}분`
                     triggerToast(`자동 잠금 대기시간이 ${label}으로 변경되었습니다.`)
                   }}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-955 text-slate-750 dark:text-zinc-300 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-750 dark:text-zinc-300 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
                 >
                   <option value="off">사용 안 함</option>
                   <option value="1">1분</option>
@@ -355,7 +429,7 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
                 <div className="flex justify-end pt-1">
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white dark:bg-zinc-800 dark:hover:bg-zinc-750 font-bold text-xs shadow flex items-center justify-center space-x-1.5 transition-colors border border-transparent"
+                    className="px-5 py-2 rounded-xl bg-primary-accent hover:bg-primary-accent-hover text-primary-accent-text font-bold text-xs shadow flex items-center justify-center space-x-1.5 transition-colors border border-transparent"
                   >
                     <CheckCircle size={13} />
                     <span>비밀번호 변경</span>

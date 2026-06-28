@@ -25,10 +25,10 @@ export function ProfileCardModal({ open, onOpenChange, user, onStartChat }: Prof
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xs p-0 overflow-hidden border-none rounded-2xl bg-zinc-900 dark:bg-zinc-955 select-none shadow-2xl">
+      <DialogContent className="max-w-xs p-0 overflow-hidden border-none rounded-2xl bg-zinc-900 dark:bg-zinc-950 select-none shadow-2xl">
         <div className="flex flex-col h-[420px] relative text-white">
           {/* Background gradient / Cover Photo */}
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-700/50 via-zinc-900/80 to-zinc-955 z-0" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-700/50 via-zinc-900/80 to-zinc-950 z-0" />
           
           {/* Top Bar with actions */}
           <div className="relative z-10 flex justify-end p-4">
@@ -65,7 +65,7 @@ export function ProfileCardModal({ open, onOpenChange, user, onStartChat }: Prof
           </div>
 
           {/* Bottom Action Section */}
-          <div className="relative z-10 p-6 border-t border-white/5 flex flex-col items-center justify-center space-y-3 bg-zinc-955/80 backdrop-blur-md">
+          <div className="relative z-10 p-6 border-t border-white/5 flex flex-col items-center justify-center space-y-3 bg-zinc-950/80 backdrop-blur-md">
             <button
               onClick={() => onStartChat(user)}
               className="w-full py-3 rounded-xl bg-kakao-yellow hover:bg-yellow-400 text-kakao-brown font-bold text-xs shadow-md transition-all flex items-center justify-center space-x-2"

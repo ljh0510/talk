@@ -56,7 +56,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
               required
               value={editNickname}
               onChange={(e) => setEditNickname(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-955 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
             />
           </div>
 
@@ -66,7 +66,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
               type="text"
               value={editStatusMessage}
               onChange={(e) => setEditStatusMessage(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-955 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
             />
           </div>
 
@@ -77,7 +77,7 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
               value={editProfileImageUrl}
               onChange={(e) => setEditProfileImageUrl(e.target.value)}
               placeholder="https://example.com/image.png"
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-955 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
             />
           </div>
 

@@ -3,6 +3,12 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+:root {
+  --primary-accent: #fee500;
+  --primary-accent-hover: #e5cf00;
+  --primary-accent-text: #3c1e1e;
+}
+
 @theme {
   --color-kakao-yellow: #FEE500;
   --color-kakao-brown: #3C1E1E;
@@ -12,6 +18,9 @@
   --color-kakao-chatBg: #BACEE0;
   --color-kakao-hover: #EAEAEA;
   --color-kakao-accent: #4A3030;
+  --color-primary-accent: var(--primary-accent);
+  --color-primary-accent-hover: var(--primary-accent-hover);
+  --color-primary-accent-text: var(--primary-accent-text);
 }
 
 body {
