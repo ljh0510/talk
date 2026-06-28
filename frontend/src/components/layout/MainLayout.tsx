@@ -98,11 +98,11 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
 
   const handleStartChat = async (user: User) => {
     setIsProfileCardOpen(false)
-    const active = chatRooms.find(r => r.type === 'DIRECT' && r.members.some(m => m.user.id === user.id))
+    const active = chatRooms.find(r => !r.is_group && r.members.some(m => m.id === user.id))
     if (active) {
       setActiveRoomId(active.id)
     } else {
-      const newId = await createChatRoom([user.id], 'DIRECT')
+      const newId = await createChatRoom(undefined, [user.id])
       if (newId) setActiveRoomId(newId)
     }
     setActiveTab('chats')
@@ -196,7 +196,14 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
         {/* Scrollable Sub Tabs Panels */}
         <div className="flex-1 overflow-y-auto px-4 py-2">
           {activeTab === 'friends' && (
-            <FriendsTab searchQuery={searchQuery} onOpenProfile={setSelectedProfileUser} onOpenProfileCard={setIsProfileCardOpen} />
+            <FriendsTab
+              searchQuery={searchQuery}
+              onOpenProfileEdit={() => setIsMyProfileEditOpen(true)}
+              onSelectProfileUser={(user) => {
+                setSelectedProfileUser(user)
+                setIsProfileCardOpen(true)
+              }}
+            />
           )}
           {activeTab === 'chats' && (
             <ChatsTab searchQuery={searchQuery} />

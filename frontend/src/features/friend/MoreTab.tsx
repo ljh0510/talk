@@ -16,11 +16,11 @@ export function MoreTab({ activeMoreApp, setActiveMoreApp, triggerToast }: MoreT
 
   // 8 Premium App Icons
   const appList = [
-    { id: 'profile', label: '프로필 편집', icon: User, color: 'bg-indigo-500 text-white' },
-    { id: 'style', label: '스타일 테마', icon: Palette, color: 'bg-pink-500 text-white' },
-    { id: 'security', label: '화면 잠금', icon: Lock, color: 'bg-emerald-500 text-white' },
-    { id: 'notifications', label: '알림 설정', icon: Bell, color: 'bg-amber-500 text-white' },
-    { id: 'info', label: '서비스 정보', icon: Info, color: 'bg-sky-500 text-white' },
+    { id: 'profile', label: '프로필 편집', icon: User, color: 'bg-indigo-500 text-white', isDemo: false },
+    { id: 'style', label: '스타일 테마', icon: Palette, color: 'bg-pink-500 text-white', isDemo: false },
+    { id: 'security', label: '화면 잠금', icon: Lock, color: 'bg-emerald-500 text-white', isDemo: false },
+    { id: 'notifications', label: '알림 설정', icon: Bell, color: 'bg-amber-500 text-white', isDemo: false },
+    { id: 'info', label: '서비스 정보', icon: Info, color: 'bg-sky-500 text-white', isDemo: false },
     // Demo inactive apps
     { id: 'mail', label: '메일', icon: Mail, color: 'bg-slate-400 text-white', isDemo: true },
     { id: 'calendar', label: '캘린더', icon: Calendar, color: 'bg-slate-400 text-white', isDemo: true },

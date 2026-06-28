@@ -163,7 +163,7 @@ export function MoreDetail({ activeSubTab, darkMode, setDarkMode, triggerToast }
     try {
       const success = await updateMyProfile(
         editNickname,
-        editStatusMessage || undefined,
+        editStatusMessage || '',
         editProfileImageUrl || undefined
       )
       if (success) {
