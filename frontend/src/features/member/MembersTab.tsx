@@ -80,13 +80,13 @@ export function MembersTab({ searchQuery, setActiveTab }: MembersTabProps) {
       {/* Birthday Members Section (Only show if there are birthday members today) */}
       {birthdayMembers.length > 0 && (
         <div className="mb-4">
-          <div className="flex items-center justify-between px-2 py-1.5 mb-1 bg-rose-50/40 dark:bg-rose-950/10 rounded-lg">
+          <div className="flex items-center justify-between px-2 py-1.5 mb-1">
             <h4 className="text-[10px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider flex items-center space-x-1">
               <span>🎂</span>
               <span>오늘 생일인 친구 ({birthdayMembers.length})</span>
             </h4>
           </div>
-          <div className="space-y-1 bg-white dark:bg-zinc-900/40 rounded-xl p-1.5 border border-rose-100/50 dark:border-rose-950/20">
+          <div className="space-y-0.5">
             {birthdayMembers.map(m => (
               <div
                 key={`bday-${m.member_id}`}
@@ -94,7 +94,7 @@ export function MembersTab({ searchQuery, setActiveTab }: MembersTabProps) {
                   setSelectedProfileUser(m.member)
                   setIsProfileCardOpen(true)
                 }}
-                className="p-2 rounded-lg hover:bg-rose-50/50 dark:hover:bg-rose-955/20 flex items-center justify-between transition-colors cursor-pointer group"
+                className="p-2.5 rounded-xl hover:bg-slate-200/50 dark:hover:bg-zinc-800/30 flex items-center justify-between transition-colors cursor-pointer group"
               >
                 <div className="flex items-center space-x-2.5 min-w-0 flex-1">
                   <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-300 dark:bg-zinc-800 flex items-center justify-center text-slate-700 dark:text-zinc-300 font-bold border border-slate-200 dark:border-zinc-800 shrink-0">
