@@ -46,8 +46,15 @@ const API_BASE = 'http://localhost:8080/api'
 const WS_BASE = 'ws://localhost:8080/ws'
 
 export const useChatStore = create<ChatStore>((set, get) => ({
-  currentUser: null,
-  accessToken: null,
+  currentUser: (() => {
+    const user = localStorage.getItem('currentUser')
+    try {
+      return user ? JSON.parse(user) : null
+    } catch {
+      return null
+    }
+  })(),
+  accessToken: localStorage.getItem('accessToken'),
   users: [],
   friends: [],
   chatRooms: [],
@@ -80,6 +87,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         throw new Error(errData.detail || 'Login failed')
       }
       const data = await response.json()
+      localStorage.setItem('accessToken', data.access_token)
+      localStorage.setItem('currentUser', JSON.stringify(data.user))
       set({ 
         currentUser: data.user, 
         accessToken: data.access_token, 
@@ -124,6 +133,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   logout: () => {
     const { ws } = get()
     if (ws) ws.close()
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('currentUser')
     set({ 
       currentUser: null, 
       accessToken: null, 
@@ -236,6 +247,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       })
       if (response.ok) {
         const updatedUser = await response.json()
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser))
         set({ currentUser: updatedUser })
         return true
       }
