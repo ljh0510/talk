@@ -90,3 +90,14 @@ talk/
 ## 5. 지침서 유지 보수 규칙 (Guidelines Maintenance)
 - 프로젝트 구조 변경(새 폴더/파일 추가 및 이동), DB 테이블 명세 추가, 라우터 엔드포인트 변경 시 **본 파일([AGENTS.md](file:///Users/ijeonghyeon/Documents/talk/.agents/AGENTS.md)) 내의 디렉터리 구조도와 프로젝트 [README.md](file:///Users/ijeonghyeon/Documents/talk/README.md)의 문서 정보를 반드시 동기화하여 수정하십시오.**
 - 새로운 AI 에이전트가 본 프로젝트 컨텍스트를 이어받아 실행할 때, 가장 먼저 본 파일을 정독하고 설계 방향성을 유지하도록 유도해야 합니다.
+
+---
+
+## 6. 모달 스타일 가이드라인 (Modal Style Guidelines)
+- **일관된 톤앤매너**: 모달 헤더에 임의의 원색 그라데이션 배경을 적용하지 마십시오. 전체 애플리케이션의 테마(Vite/카카오 다크·라이트 스킴)와 조화되도록 세련된 단색 배경(White / Zinc-900)을 유지합니다.
+- **표준 구조**:
+  - `DialogHeader` 에는 하단 실선 테두리(`border-b border-slate-100 dark:border-zinc-800 pb-3`)를 부착합니다.
+  - `DialogTitle` 은 `text-sm font-extrabold` 크기를, `DialogDescription` 은 `text-[11px] text-slate-400` 스타일을 유지합니다.
+- **접근성 수칙**: Radix UI Dialog Primitive의 스크린 리더 요건을 충족하도록 모든 모달 다이얼로그 본문에 타이틀과 설명문을 적합하게 배치하거나 `sr-only` 래핑 처리합니다.
+- **스크롤 컴포넌트**: 긴 목록 렌더링 시 브라우저 기본 스크롤바 대신, 웹 표준 접근성 표준이 가미된 `ScrollArea.tsx` 컴포넌트를 필수 적용하여 균일한 비주얼을 확보하십시오.
+

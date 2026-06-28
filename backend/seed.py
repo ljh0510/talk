@@ -40,8 +40,8 @@ async def seed_data():
             zioyou_company_code="ZIO-KE",
             member_type="ADMIN",
             member_status="ACTIVE",
-            department="플랫폼 개발부",
-            department_code="DEPT-PLAT",
+            department="플랫폼 개발부/UI개발팀",
+            department_code="DEPT-PLAT-UI",
             department_sort_order=4,
             position="대리",
             position_code="POS-ASST",
@@ -120,13 +120,12 @@ async def seed_data():
             duty_sort_order=2
         )
         
-        # New Demo Users to expand datasets
         u5 = schemas.UserCreate(
             username="hwang",
             email="hwang@zioyou.com",
             password="password",
             nickname="황희",
-            profile_image_url="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80",
+            profile_image_url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
             status_message="정사를 돌보는 중... ⚖️",
             workspace="카카오 엔터프라이즈",
             workspace_code="WKSP-KE",
@@ -144,6 +143,104 @@ async def seed_data():
             duty_code="DUTY-FIN",
             duty_sort_order=10
         )
+        
+        u7 = schemas.UserCreate(
+            username="ryu",
+            email="ryu@zioyou.com",
+            password="password",
+            nickname="류성룡",
+            profile_image_url="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&auto=format&fit=crop&q=80",
+            status_message="나라의 기강을 바로세운다",
+            workspace="카카오 엔터프라이즈",
+            workspace_code="WKSP-KE",
+            workspace_logo="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80",
+            zioyou_company_code="ZIO-KE",
+            member_type="REGULAR",
+            member_status="ACTIVE",
+            department="인사조직부",
+            department_code="DEPT-HR",
+            department_sort_order=5,
+            position="실장",
+            position_code="POS-HDIR",
+            position_sort_order=3,
+            duty="인사 기획 및 노무",
+            duty_code="DUTY-HR",
+            duty_sort_order=5
+        )
+
+        u8 = schemas.UserCreate(
+            username="jang",
+            email="jang@zioyou.com",
+            password="password",
+            nickname="장영실",
+            profile_image_url="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop&q=80",
+            status_message="하늘의 별을 관측하는 시간 🌠",
+            workspace="카카오 엔터프라이즈",
+            workspace_code="WKSP-KE",
+            workspace_logo="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80",
+            zioyou_company_code="ZIO-KE",
+            member_type="REGULAR",
+            member_status="ACTIVE",
+            department="R&D 기술연구소/코어개발팀",
+            department_code="DEPT-RD-CORE",
+            department_sort_order=6,
+            position="책임연구원",
+            position_code="POS-PR",
+            position_sort_order=2,
+            duty="엔진 설계 개발",
+            duty_code="DUTY-RD",
+            duty_sort_order=6
+        )
+
+        u9 = schemas.UserCreate(
+            username="heo",
+            email="heo@zioyou.com",
+            password="password",
+            nickname="허준",
+            profile_image_url="https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=100&auto=format&fit=crop&q=80",
+            status_message="사내 복지와 건강 예방 🩺",
+            workspace="카카오 엔터프라이즈",
+            workspace_code="WKSP-KE",
+            workspace_logo="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80",
+            zioyou_company_code="ZIO-KE",
+            member_type="REGULAR",
+            member_status="ACTIVE",
+            department="의무실/보건실",
+            department_code="DEPT-MED",
+            department_sort_order=7,
+            position="원장",
+            position_code="POS-MED",
+            position_sort_order=4,
+            duty="사내 헬스 케어",
+            duty_code="DUTY-MED",
+            duty_sort_order=7
+        )
+
+        u10 = schemas.UserCreate(
+            username="nong",
+            email="nong@zioyou.com",
+            password="password",
+            nickname="신농씨",
+            profile_image_url="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80",
+            status_message="약초 분석 중... 🌱",
+            workspace="카카오 엔터프라이즈",
+            workspace_code="WKSP-KE",
+            workspace_logo="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80",
+            zioyou_company_code="ZIO-KE",
+            member_type="REGULAR",
+            member_status="ACTIVE",
+            department="의무실/보건실/약제개발팀",
+            department_code="DEPT-MED-PHARM",
+            department_sort_order=7,
+            position="연구원",
+            position_code="POS-MEDR",
+            position_sort_order=5,
+            duty="보건 약제 기획",
+            duty_code="DUTY-MED",
+            duty_sort_order=8
+        )
+
+        # User 6: Saimdang in WKSP-HK (Hangul Cultural Foundation)
         u6 = schemas.UserCreate(
             username="sin",
             email="sin@zioyou.com",
@@ -174,6 +271,10 @@ async def seed_data():
         db_u4 = await crud.create_user(db, u4)
         db_u5 = await crud.create_user(db, u5)
         db_u6 = await crud.create_user(db, u6)
+        db_u7 = await crud.create_user(db, u7)
+        db_u8 = await crud.create_user(db, u8)
+        db_u9 = await crud.create_user(db, u9)
+        db_u10 = await crud.create_user(db, u10)
         
         def get_nickname(user):
             rep = next((m for m in user.workspace_memberships if m.is_representative), None)
@@ -187,7 +288,7 @@ async def seed_data():
                 rep = user.department_memberships[0]
             return rep.department_id if rep else None
 
-        print(f"Users created: {get_nickname(db_u1)}, {get_nickname(db_u2)}, {get_nickname(db_u3)}, {get_nickname(db_u4)}, {get_nickname(db_u5)}, {get_nickname(db_u6)}")
+        print(f"Users created: {get_nickname(db_u1)}, {get_nickname(db_u2)}, {get_nickname(db_u3)}, {get_nickname(db_u4)}, {get_nickname(db_u5)}, {get_nickname(db_u6)}, {get_nickname(db_u7)}, {get_nickname(db_u8)}, {get_nickname(db_u9)}, {get_nickname(db_u10)}")
 
         def get_workspace_id(user):
             rep = next((m for m in user.workspace_memberships if m.is_representative), None)
@@ -235,7 +336,7 @@ async def seed_data():
 
         # Update Department managers to resolve user-department circular dependency
         print("Setting Department managers...")
-        for u in [db_u1, db_u2, db_u3, db_u4, db_u5, db_u6]:
+        for u in [db_u1, db_u2, db_u3, db_u4, db_u5, db_u6, db_u7, db_u8, db_u9, db_u10]:
             d_id = get_dept_id(u)
             if d_id:
                 res = await db.execute(select(models.Department).where(models.Department.id == d_id))
@@ -256,21 +357,18 @@ async def seed_data():
         
         # Add messages for r1
         print("Adding messages to 1:1 Chat...")
-        # Msg 1: Lee -> Hong (older)
         m1 = models.Message(
             room_id=r1.id,
             sender_id=db_u2.id,
             created_at=datetime.now(timezone.utc) - timedelta(hours=2)
         )
         m1.content = "길동아, 금일 플랫폼 개발 건 진척은 어찌 되어가는가?"
-        # Msg 2: Hong -> Lee (newer)
         m2 = models.Message(
             room_id=r1.id,
             sender_id=db_u1.id,
             created_at=datetime.now(timezone.utc) - timedelta(hours=1, minutes=45)
         )
         m2.content = "장군님! 다중 테넌트 계층형 부서/직급 매핑 리팩토링이 최종 완료 단계에 있습니다."
-        # Msg 3: Lee -> Hong (newest)
         m3 = models.Message(
             room_id=r1.id,
             sender_id=db_u2.id,
