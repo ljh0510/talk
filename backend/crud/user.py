@@ -204,7 +204,9 @@ async def create_user(db: AsyncSession, user_in: schemas.UserCreate):
             profile_image_url=user_in.profile_image_url,
             status_message=user_in.status_message,
             phone_number=user_in.phone_number,
-            office_phone=user_in.office_phone
+            office_phone=user_in.office_phone,
+            birthday=user_in.birthday,
+            birthday_type=user_in.birthday_type
         )
         db.add(wk_member)
         await db.flush()
@@ -362,6 +364,10 @@ async def update_user_profile(db: AsyncSession, user_id: int, user_update: schem
                 rep_member.phone_number = user_update.phone_number
             if user_update.office_phone is not None:
                 rep_member.office_phone = user_update.office_phone
+            if user_update.birthday is not None:
+                rep_member.birthday = user_update.birthday
+            if user_update.birthday_type is not None:
+                rep_member.birthday_type = user_update.birthday_type
             await db.flush()
             
         # Resolve dynamic Master Keys if updated (with sort order support)
@@ -388,7 +394,9 @@ async def update_user_profile(db: AsyncSession, user_id: int, user_update: schem
                     profile_image_url=user_update.profile_image_url,
                     status_message=user_update.status_message,
                     phone_number=user_update.phone_number or (rep_member.phone_number if rep_member else None),
-                    office_phone=user_update.office_phone or (rep_member.office_phone if rep_member else None)
+                    office_phone=user_update.office_phone or (rep_member.office_phone if rep_member else None),
+                    birthday=user_update.birthday or (rep_member.birthday if rep_member else None),
+                    birthday_type=user_update.birthday_type or (rep_member.birthday_type if rep_member else None)
                 )
                 db.add(wk_member)
                 await db.flush()

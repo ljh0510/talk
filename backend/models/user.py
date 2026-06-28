@@ -58,6 +58,8 @@ class WorkspaceMember(Base):
     status_message: Mapped[str | None] = mapped_column(String(255), nullable=True)
     phone_number: Mapped[str | None] = mapped_column(String(30), nullable=True)
     office_phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    birthday: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    birthday_type: Mapped[str | None] = mapped_column(String(10), nullable=True)
     
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

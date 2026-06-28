@@ -16,6 +16,8 @@ export function normalizeUser(user: any): User {
     status_message: active?.status_message || undefined,
     phone_number: active?.phone_number || undefined,
     office_phone: active?.office_phone || undefined,
+    birthday: active?.birthday || undefined,
+    birthday_type: active?.birthday_type || undefined,
     workspace: active?.workspace_name || undefined,
     workspace_code: active?.workspace_code || undefined,
     workspace_domain: active?.workspace_domain || undefined,
@@ -70,7 +72,7 @@ interface ChatStore {
   // Friends actions
   fetchMembers: () => Promise<void>
   addMemberRelation: (email: string) => Promise<{ success: boolean; error?: string }>
-  updateMyProfile: (nickname: string, statusMessage: string, profileImageUrl?: string, phoneNumber?: string, officePhone?: string) => Promise<boolean>
+  updateMyProfile: (nickname: string, statusMessage: string, profileImageUrl?: string, phoneNumber?: string, officePhone?: string, birthday?: string, birthdayType?: 'SOLAR' | 'LUNAR') => Promise<boolean>
 
   // Rooms and Messages actions
   fetchChatRooms: () => Promise<void>
@@ -344,7 +346,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  updateMyProfile: async (nickname, statusMessage, profileImageUrl, phoneNumber, officePhone) => {
+  updateMyProfile: async (nickname, statusMessage, profileImageUrl, phoneNumber, officePhone, birthday, birthdayType) => {
     const { accessToken, currentUser, activeWorkspaceId } = get()
     if (!accessToken || !currentUser) return false
     try {
@@ -360,7 +362,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           status_message: statusMessage,
           profile_image_url: profileImageUrl,
           phone_number: phoneNumber,
-          office_phone: officePhone
+          office_phone: officePhone,
+          birthday,
+          birthday_type: birthdayType
         }),
       })
       if (response.ok) {

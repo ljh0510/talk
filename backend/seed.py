@@ -50,7 +50,9 @@ async def seed_data():
             duty_code="DUTY-FULL",
             duty_sort_order=3,
             phone_number="010-1000-0001",
-            office_phone="02-100-0001"
+            office_phone="02-100-0001",
+            birthday="1985-01-15",
+            birthday_type="SOLAR"
         )
         u2 = schemas.UserCreate(
             username="lee",
@@ -75,7 +77,9 @@ async def seed_data():
             duty_code="DUTY-GEN",
             duty_sort_order=1,
             phone_number="010-1000-0002",
-            office_phone="02-100-0002"
+            office_phone="02-100-0002",
+            birthday="1978-08-20",
+            birthday_type="SOLAR"
         )
         u3 = schemas.UserCreate(
             username="sejong",
@@ -100,7 +104,9 @@ async def seed_data():
             duty_code="DUTY-DIR",
             duty_sort_order=1,
             phone_number="010-1000-0003",
-            office_phone="02-100-0003"
+            office_phone="02-100-0003",
+            birthday="1990-06-28",
+            birthday_type="LUNAR"
         )
         u4 = schemas.UserCreate(
             username="kim",
@@ -125,7 +131,9 @@ async def seed_data():
             duty_code="DUTY-COACH",
             duty_sort_order=2,
             phone_number="010-1000-0004",
-            office_phone="02-100-0004"
+            office_phone="02-100-0004",
+            birthday="1982-12-05",
+            birthday_type="SOLAR"
         )
         
         u5 = schemas.UserCreate(
@@ -151,7 +159,9 @@ async def seed_data():
             duty_code="DUTY-FIN",
             duty_sort_order=10,
             phone_number="010-1000-0005",
-            office_phone="02-100-0005"
+            office_phone="02-100-0005",
+            birthday="1975-04-10",
+            birthday_type="SOLAR"
         )
         
         u7 = schemas.UserCreate(
@@ -177,7 +187,9 @@ async def seed_data():
             duty_code="DUTY-HR",
             duty_sort_order=5,
             phone_number="010-1000-0007",
-            office_phone="02-100-0007"
+            office_phone="02-100-0007",
+            birthday="1980-03-30",
+            birthday_type="SOLAR"
         )
 
         u8 = schemas.UserCreate(
@@ -203,7 +215,9 @@ async def seed_data():
             duty_code="DUTY-RD",
             duty_sort_order=6,
             phone_number="010-1000-0008",
-            office_phone="02-100-0008"
+            office_phone="02-100-0008",
+            birthday="1992-07-08",
+            birthday_type="SOLAR"
         )
 
         u9 = schemas.UserCreate(
@@ -229,7 +243,9 @@ async def seed_data():
             duty_code="DUTY-MED",
             duty_sort_order=7,
             phone_number="010-1000-0009",
-            office_phone="02-100-0009"
+            office_phone="02-100-0009",
+            birthday="1979-09-12",
+            birthday_type="LUNAR"
         )
 
         u10 = schemas.UserCreate(
@@ -255,7 +271,9 @@ async def seed_data():
             duty_code="DUTY-MED",
             duty_sort_order=8,
             phone_number="010-1000-0010",
-            office_phone="02-100-0010"
+            office_phone="02-100-0010",
+            birthday="1984-06-25",
+            birthday_type="SOLAR"
         )
 
         # User 6: Saimdang in WKSP-HK (Hangul Cultural Foundation)
@@ -282,7 +300,9 @@ async def seed_data():
             duty_code="DUTY-ART",
             duty_sort_order=5,
             phone_number="010-1000-0006",
-            office_phone="02-100-0006"
+            office_phone="02-100-0006",
+            birthday="1988-11-22",
+            birthday_type="LUNAR"
         )
         
         db_u1 = await crud.create_user(db, u1)
@@ -330,7 +350,9 @@ async def seed_data():
                 profile_image_url="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
                 status_message="한글 서비스 고도화 기획 중 💻",
                 phone_number="010-1000-0003",
-                office_phone="02-100-0003"
+                office_phone="02-100-0003",
+                birthday="1990-06-28",
+                birthday_type="LUNAR"
             )
             m_kim = models.WorkspaceMember(
                 workspace_id=w1,
@@ -340,7 +362,9 @@ async def seed_data():
                 profile_image_url="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80",
                 status_message="스마트 오피스 겸직 업무 🐴",
                 phone_number="010-1000-0004",
-                office_phone="02-100-0004"
+                office_phone="02-100-0004",
+                birthday="1982-12-05",
+                birthday_type="SOLAR"
             )
             db.add_all([m_sejong, m_kim])
             await db.flush()

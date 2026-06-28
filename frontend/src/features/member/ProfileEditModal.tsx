@@ -16,6 +16,8 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
   const [editProfileImageUrl, setEditProfileImageUrl] = useState('')
   const [editPhoneNumber, setEditPhoneNumber] = useState('')
   const [editOfficePhone, setEditOfficePhone] = useState('')
+  const [editBirthday, setEditBirthday] = useState('')
+  const [editBirthdayType, setEditBirthdayType] = useState<'SOLAR' | 'LUNAR'>('SOLAR')
 
   useEffect(() => {
     if (open && currentUser) {
@@ -24,6 +26,8 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
       setEditProfileImageUrl(currentUser.profile_image_url || '')
       setEditPhoneNumber(currentUser.phone_number || '')
       setEditOfficePhone(currentUser.office_phone || '')
+      setEditBirthday(currentUser.birthday || '')
+      setEditBirthdayType(currentUser.birthday_type || 'SOLAR')
     }
   }, [open, currentUser])
 
@@ -34,7 +38,9 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
       editStatusMessage.trim(),
       editProfileImageUrl.trim() || undefined,
       editPhoneNumber.trim() || undefined,
-      editOfficePhone.trim() || undefined
+      editOfficePhone.trim() || undefined,
+      editBirthday.trim() || undefined,
+      editBirthdayType
     )
     if (success) {
       onOpenChange(false)
@@ -127,6 +133,29 @@ export function ProfileEditModal({ open, onOpenChange }: ProfileEditModalProps) 
               placeholder="https://example.com/image.png"
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
             />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">생년월일</label>
+              <input
+                type="date"
+                value={editBirthday}
+                onChange={(e) => setEditBirthday(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-955 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">음/양력</label>
+              <select
+                value={editBirthdayType}
+                onChange={(e) => setEditBirthdayType(e.target.value as 'SOLAR' | 'LUNAR')}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-955 text-slate-800 dark:text-zinc-100 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-700"
+              >
+                <option value="SOLAR">양력</option>
+                <option value="LUNAR">음력</option>
+              </select>
+            </div>
           </div>
 
           <button

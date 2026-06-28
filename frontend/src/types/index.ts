@@ -34,6 +34,8 @@ export interface WorkspaceMembership {
   status_message?: string
   phone_number?: string
   office_phone?: string
+  birthday?: string
+  birthday_type?: 'SOLAR' | 'LUNAR'
   is_representative: boolean
   department?: DepartmentInfo
 }
@@ -69,6 +71,8 @@ export interface User {
   duty_sort_order?: number
   phone_number?: string
   office_phone?: string
+  birthday?: string
+  birthday_type?: 'SOLAR' | 'LUNAR'
 }
 
 export interface MemberRelation {

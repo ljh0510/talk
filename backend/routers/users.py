@@ -52,6 +52,8 @@ def map_user_to_response(user: User) -> dict:
             "status_message": m.status_message,
             "phone_number": m.phone_number,
             "office_phone": m.office_phone,
+            "birthday": m.birthday,
+            "birthday_type": m.birthday_type,
             "is_representative": m.is_representative,
             "department": dept_data
         }

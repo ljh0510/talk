@@ -30,6 +30,14 @@ export function MembersTab({ searchQuery, setActiveTab }: MembersTabProps) {
     setActiveTab('chats')
   }
 
+  const getTodayMMDD = () => {
+    const d = new Date()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${month}-${day}`
+  }
+
+  const todayMMDD = getTodayMMDD()
   const activeRelations = members
 
   const filteredMembers = activeRelations.filter(m => {
@@ -39,6 +47,12 @@ export function MembersTab({ searchQuery, setActiveTab }: MembersTabProps) {
       m.member.nickname.toLowerCase().includes(q) ||
       m.member.username.toLowerCase().includes(q)
     )
+  })
+
+  // 오늘 생일인 사람 필터
+  const birthdayMembers = filteredMembers.filter(m => {
+    if (!m.member.birthday) return false
+    return m.member.birthday.substring(5, 10) === todayMMDD
   })
 
   return (
@@ -63,7 +77,61 @@ export function MembersTab({ searchQuery, setActiveTab }: MembersTabProps) {
         </div>
       </div>
 
-      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">멤버 리스트 ({filteredMembers.length})</h4>
+      {/* Birthday Members Section (Only show if there are birthday members today) */}
+      {birthdayMembers.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between px-2 py-1.5 mb-1 bg-rose-50/40 dark:bg-rose-950/10 rounded-lg">
+            <h4 className="text-[10px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider flex items-center space-x-1">
+              <span>🎂</span>
+              <span>오늘 생일인 친구 ({birthdayMembers.length})</span>
+            </h4>
+          </div>
+          <div className="space-y-1 bg-white dark:bg-zinc-900/40 rounded-xl p-1.5 border border-rose-100/50 dark:border-rose-950/20">
+            {birthdayMembers.map(m => (
+              <div
+                key={`bday-${m.member_id}`}
+                onClick={() => {
+                  setSelectedProfileUser(m.member)
+                  setIsProfileCardOpen(true)
+                }}
+                className="p-2 rounded-lg hover:bg-rose-50/50 dark:hover:bg-rose-955/20 flex items-center justify-between transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center space-x-2.5 min-w-0 flex-1">
+                  <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-300 dark:bg-zinc-800 flex items-center justify-center text-slate-700 dark:text-zinc-300 font-bold border border-slate-200 dark:border-zinc-800 shrink-0">
+                    {m.member.profile_image_url ? (
+                      <img src={m.member.profile_image_url} alt={m.member.nickname} className="w-full h-full object-cover" />
+                    ) : (
+                      m.member.nickname[0]
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center space-x-1.5">
+                      <span className="text-xs font-bold text-slate-800 dark:text-zinc-100">{m.member.nickname}</span>
+                      <span className="text-[9px] px-1 py-0.2 bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 rounded font-bold">생일</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                      {m.member.status_message || '생일 축하 메시지를 남겨보세요! 🎉'}
+                    </p>
+                  </div>
+                </div>
+                {/* Gift Link / Icon Decoration */}
+                <div className="flex items-center space-x-2 shrink-0">
+                  <span className="text-xs animate-bounce" title="선물하기">🎁</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between px-2 py-1.5 mb-1.5 border-b border-slate-100 dark:border-zinc-800/40 pb-2">
+        <h4 className="text-[11px] font-extrabold text-slate-500 dark:text-zinc-400 tracking-tight flex items-center space-x-1.5">
+          <span>전체 멤버</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 text-[9px] font-bold">
+            {filteredMembers.length}
+          </span>
+        </h4>
+      </div>
       
       {filteredMembers.length === 0 ? (
         <div className="text-center py-8 text-xs text-slate-400">검색된 멤버가 없습니다.</div>

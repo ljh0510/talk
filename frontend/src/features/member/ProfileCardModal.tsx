@@ -46,7 +46,14 @@ export function ProfileCardModal({ open, onOpenChange, user, onStartChat }: Prof
                 )}
               </div>
               <h3 className="text-base font-extrabold tracking-tight mb-0.5 text-slate-800 dark:text-zinc-100">{user.nickname}</h3>
-              <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold mb-2.5">@{user.username}</span>
+              <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold mb-1.5">@{user.username}</span>
+
+              {user.birthday && (
+                <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-rose-50/80 dark:bg-rose-950/20 text-rose-500 dark:text-rose-400 text-[10px] font-extrabold border border-rose-100/50 dark:border-rose-950/30 mb-2.5 shadow-sm">
+                  <span>🎂</span>
+                  <span>{user.birthday} ({user.birthday_type === 'SOLAR' ? '양력' : '음력'})</span>
+                </div>
+              )}
 
               {/* Status Message (Under name for cleaner look) */}
               <p className="text-[11px] text-slate-600 dark:text-zinc-350 text-center font-medium max-w-[240px] truncate px-3 py-1.5 bg-slate-50/80 dark:bg-zinc-950/40 rounded-xl border border-slate-100 dark:border-zinc-800/30">
@@ -54,7 +61,7 @@ export function ProfileCardModal({ open, onOpenChange, user, onStartChat }: Prof
               </p>
             </div>
             {/* Unified Info Card */}
-            {(user.workspace || user.phone_number || user.office_phone || user.email) && (
+            {(user.workspace || user.phone_number || user.office_phone || user.email || user.birthday) && (
               <div className="w-full px-1">
                 <div className="p-4 rounded-2xl bg-slate-50/60 dark:bg-zinc-800/20 border border-slate-100/80 dark:border-zinc-800/40 w-full flex flex-col space-y-3.5 text-xs text-slate-600 dark:text-zinc-300">
                   
@@ -110,12 +117,12 @@ export function ProfileCardModal({ open, onOpenChange, user, onStartChat }: Prof
                   )}
 
                   {/* Divider Line (Only if both sections exist) */}
-                  {user.workspace && (user.phone_number || user.office_phone || user.email) && (
+                  {user.workspace && (user.phone_number || user.office_phone || user.email || user.birthday) && (
                     <div className="border-t border-slate-200/50 dark:border-zinc-800/40 my-0.5" />
                   )}
 
-                  {/* Part 2: Contact Details */}
-                  {(user.phone_number || user.office_phone || user.email) && (
+                  {/* Part 2: Contact & Personal Details */}
+                  {(user.phone_number || user.office_phone || user.email || user.birthday) && (
                     <div className="flex flex-col space-y-2">
                       {user.phone_number && (
                         <div className="flex items-center space-x-2 font-medium">
@@ -133,6 +140,15 @@ export function ProfileCardModal({ open, onOpenChange, user, onStartChat }: Prof
                         <div className="flex items-center space-x-2 font-medium">
                           <span className="text-slate-400 dark:text-zinc-500 w-4 text-center">✉️</span>
                           <span className="break-all">{user.email}</span>
+                        </div>
+                      )}
+                      {user.birthday && (
+                        <div className="flex items-center space-x-2 font-medium">
+                          <span className="text-slate-400 dark:text-zinc-500 w-4 text-center">🎂</span>
+                          <span>
+                            {user.birthday}
+                            {user.birthday_type ? ` (${user.birthday_type === 'SOLAR' ? '양력' : '음력'})` : ''}
+                          </span>
                         </div>
                       )}
                     </div>
