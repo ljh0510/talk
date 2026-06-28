@@ -9,7 +9,7 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
   const [passcode, setPasscode] = useState<string>('')
   const [error, setError] = useState<boolean>(false)
 
-  const DEFAULT_PIN = '0000'
+  const DEFAULT_PIN = localStorage.getItem('lockPin') || '0000'
 
   const handleKeyPress = (num: string) => {
     setError(false)
@@ -58,7 +58,7 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
             {error ? (
               <span className="text-red-500 font-semibold">비밀번호가 올바르지 않습니다.</span>
             ) : (
-              '보안을 위해 비밀번호 4자리를 입력하세요. (초기: 0000)'
+              `보안을 위해 비밀번호 4자리를 입력하세요. ${DEFAULT_PIN === '0000' ? '(초기: 0000)' : ''}`
             )}
           </p>
         </div>
