@@ -225,10 +225,10 @@ export function AddMemberModal({ open, onOpenChange }: AddMemberModalProps) {
         <DialogHeader className="p-5 border-b border-slate-100 dark:border-zinc-800 shrink-0">
           <DialogTitle className="text-sm font-extrabold text-slate-800 dark:text-zinc-100 flex items-center space-x-1.5">
             <UserPlus size={18} className="text-slate-500" />
-            <span>조직도 멤버 추가</span>
+            <span>즐겨찾는 멤버 추가</span>
           </DialogTitle>
           <DialogDescription className="text-[11px] text-slate-400 mt-1">
-            사내 조직도 트리에서 부서를 선택하고 임직원을 확인하여 편리하게 멤버를 추가하세요.
+            자주 대화하는 멤버를 찾아 즐겨찾기에 추가하세요.
           </DialogDescription>
         </DialogHeader>
 
@@ -360,7 +360,7 @@ export function AddMemberModal({ open, onOpenChange }: AddMemberModalProps) {
                           {isMember ? (
                             <span className="inline-flex items-center justify-center space-x-1 min-w-[56px] px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-zinc-900 text-slate-400 dark:text-zinc-500 text-[9px] font-bold border border-slate-100 dark:border-zinc-800/60 whitespace-nowrap">
                               <Check size={10} strokeWidth={3} />
-                              <span>멤버</span>
+                              <span>추가됨</span>
                             </span>
                           ) : (
                             <button
