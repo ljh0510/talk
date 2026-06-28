@@ -30,7 +30,7 @@ export function ChatArea() {
       {activeRoomDetail ? (
         <>
           {/* Chat Room Header */}
-          <div className="h-[64px] px-6 bg-white/95 dark:bg-zinc-900/95 border-b border-slate-200 dark:border-zinc-800/80 flex items-center justify-between select-none glass-panel z-10">
+          <div className="h-[64px] px-6 bg-white/95 dark:bg-zinc-900/95 flex items-center justify-between select-none glass-panel z-10">
             <div className="flex items-center space-x-3">
               <div className="flex flex-col">
                 <h2 className="text-sm font-bold text-slate-800 dark:text-zinc-100">

@@ -193,7 +193,7 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
   return (
     <div className="flex-1 bg-slate-50 dark:bg-zinc-950 flex flex-col h-full select-none overflow-hidden relative">
       {/* Fixed 64px Header aligned with ChatArea header Y position */}
-      <div className="h-[64px] px-6 bg-white/95 dark:bg-zinc-900/95 border-b border-slate-200 dark:border-zinc-800/80 flex items-center justify-between select-none glass-panel z-10 shrink-0">
+      <div className="h-[64px] px-6 bg-white/95 dark:bg-zinc-900/95 flex items-center justify-between select-none glass-panel z-10 shrink-0">
         <div className="flex items-center space-x-2">
           {getHeaderIcon()}
           <h2 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200">{getHeaderTitle()}</h2>
