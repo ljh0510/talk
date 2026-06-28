@@ -11,7 +11,43 @@
 
 ---
 
-## 2. 핵심 기술 스택 및 아키텍처 규칙 (Architecture Rules)
+## 2. 프로젝트 디렉터리 구조 (Directory Structure)
+
+전체 프로젝트는 FastAPI 백엔드와 Vite + React 프론트엔드로 구성되며 구조는 아래와 같습니다.
+
+```
+talk/
+├── .agents/               # AI 에이전트 지침서 및 규칙 설정 폴더
+│   └── AGENTS.md          # 본 프로젝트 개발 지침서 (본 파일)
+├── .gitignore             # Git 관리 제외 설정 파일
+├── README.md              # 프로젝트 리드미 (통합 지침서)
+├── run.sh                 # 통합 타입 검수, DB 마이그레이션 및 동시 실행 스크립트
+├── backend/               # FastAPI 비동기 백엔드 모듈
+│   ├── app/
+│   │   ├── database.py    # Async SQLAlchemy 엔진 설정 및 세션 팩토리
+│   │   ├── models.py      # SQLAlchemy 데이터 모델 (User, ChatRoom, ChatRoomMember, Message)
+│   │   ├── schemas.py     # Pydantic 요청/응답 스키마 정의
+│   │   ├── crud.py        # 데이터베이스 질의 및 비즈니스 쿼리 (Repository 패턴)
+│   │   └── main.py        # API 엔드포인트 라우터, CORS 관리 및 WebSocket 커넥션 매니저
+│   ├── requirements.txt   # 백엔드 의존성 라이브러리 목록
+│   └── seed.py            # SQLite 데이터베이스 마이그레이션 및 데모 데이터 시딩 스크립트
+└── frontend/              # Vite React 프론트엔드 모듈
+    ├── src/
+    │   ├── components/
+    │   │   └── ui/
+    │   │       └── ScrollArea.tsx   # Radix UI ScrollArea 스크롤바 컴포넌트
+    │   ├── store/
+    │   │   └── useChatStore.ts      # Zustand 상태 관리 및 비동기 API/WebSocket 처리기
+    │   ├── App.tsx        # 메인 웹 UI 대시보드 컴포넌트
+    │   ├── index.css      # Tailwind CSS v4 스타일시트 (카카오 테마 추가)
+    │   └── main.tsx       # React 진입 마운트 파일
+    ├── postcss.config.js  # PostCSS 플러그인 설정
+    └── tailwind.config.js # 테마 및 확장 플러그인 설정
+```
+
+---
+
+## 3. 핵심 기술 스택 및 아키텍처 규칙 (Architecture Rules)
 
 ### 1) Backend (FastAPI, SQLAlchemy)
 - **비동기성(Asynchrony) 보장**: 모든 DB 쿼리 및 라우터는 비동기(`async/await`) 처리와 `AsyncSession` 의존성 주입을 필수로 활용해야 합니다.
@@ -26,7 +62,7 @@
 
 ---
 
-## 3. 검수 및 실행 루틴 (Verification & Run Routine)
+## 4. 검수 및 실행 루틴 (Verification & Run Routine)
 
 코드 변경을 완료한 경우, 에이전트는 반드시 프로젝트 루트에 위치한 [run.sh](file:///Users/ijeonghyeon/Documents/talk/run.sh) 스크립트를 활용해 검증해야 합니다.
 
@@ -41,6 +77,6 @@
 
 ---
 
-## 4. 지침서 유지 보수 규칙 (Guidelines Maintenance)
-- 프로젝트 구조 변경(새 폴더/파일 추가 및 이동), DB 테이블 명세 추가, 라우터 엔드포인트 변경 시 **본 파일(`.agent_instructions.md`)과 프로젝트 [README.md](file:///Users/ijeonghyeon/Documents/talk/README.md)의 문서 정보를 반드시 동기화하여 수정하십시오.**
+## 5. 지침서 유지 보수 규칙 (Guidelines Maintenance)
+- 프로젝트 구조 변경(새 폴더/파일 추가 및 이동), DB 테이블 명세 추가, 라우터 엔드포인트 변경 시 **본 파일([AGENTS.md](file:///Users/ijeonghyeon/Documents/talk/.agents/AGENTS.md)) 내의 디렉터리 구조도와 프로젝트 [README.md](file:///Users/ijeonghyeon/Documents/talk/README.md)의 문서 정보를 반드시 동기화하여 수정하십시오.**
 - 새로운 AI 에이전트가 본 프로젝트 컨텍스트를 이어받아 실행할 때, 가장 먼저 본 파일을 정독하고 설계 방향성을 유지하도록 유도해야 합니다.

@@ -3,7 +3,7 @@
 본 문서는 카카오톡을 벤치마킹한 엔터프라이즈급 실시간 메신저 애플리케이션인 **KokoaTalk Enterprise**의 개발 표준, 프로젝트 디렉터리 구조 및 실행 가이드를 정의합니다.
 
 > [!WARNING]
-> **프로젝트 구조를 변경하거나 모듈을 추가할 때 본 지침서(README.md)의 구조도를 항상 최신으로 갱신해 주십시오.**
+> **프로젝트 구조를 변경하거나 모듈을 추가할 때 본 지침서([README.md](file:///Users/ijeonghyeon/Documents/talk/README.md))와 에이전트 지침서([AGENTS.md](file:///Users/ijeonghyeon/Documents/talk/.agents/AGENTS.md))의 구조도를 항상 최신으로 동기화하여 갱신해 주십시오.**
 
 ---
 
@@ -13,8 +13,10 @@
 
 ```
 talk/
+├── .agents/               # AI 에이전트 지침서 및 규칙 설정 폴더
+│   └── AGENTS.md          # 본 프로젝트 개발 지침서
 ├── .gitignore             # Git 관리 제외 설정 파일
-├── README.md              # 본 개발 지침서
+├── README.md              # 프로젝트 리드미 (통합 지침서)
 ├── run.sh                 # 통합 타입 검수, DB 마이그레이션 및 동시 실행 스크립트
 ├── backend/               # FastAPI 비동기 백엔드 모듈
 │   ├── app/
