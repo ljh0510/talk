@@ -5,7 +5,6 @@ import { Users, MessageCircle, Bell, BellOff, Settings, XSquare, LogOut } from '
 interface SidebarProps {
   activeTab: 'friends' | 'chats' | 'settings'
   setActiveTab: (tab: 'friends' | 'chats' | 'settings') => void
-  onOpenProfileEdit: () => void
   onTriggerLogout: () => void
   onTriggerExit: () => void
 }
@@ -13,7 +12,6 @@ interface SidebarProps {
 export function Sidebar({
   activeTab,
   setActiveTab,
-  onOpenProfileEdit,
   onTriggerLogout,
   onTriggerExit
 }: SidebarProps) {
@@ -35,22 +33,7 @@ export function Sidebar({
 
   return (
     <div className="w-[72px] bg-slate-200 dark:bg-zinc-900 border-r border-slate-300 dark:border-zinc-800 flex flex-col items-center py-6 justify-between select-none shrink-0">
-      <div className="flex flex-col items-center space-y-6 w-full">
-        {/* My Profile Icon */}
-        <div className="relative group cursor-pointer" onClick={onOpenProfileEdit}>
-          <div className="w-11 h-11 rounded-2xl overflow-hidden bg-slate-400 dark:bg-zinc-800 flex items-center justify-center text-white border border-slate-300 dark:border-zinc-700 font-bold hover:scale-105 transition-transform shadow">
-            {currentUser.profile_image_url ? (
-              <img src={currentUser.profile_image_url} alt={currentUser.nickname} className="w-full h-full object-cover" />
-            ) : (
-              currentUser.nickname[0]
-            )}
-          </div>
-          <div className="absolute left-16 top-2.5 hidden group-hover:block bg-zinc-950 text-white text-xs px-2 py-1 rounded shadow whitespace-nowrap z-[100]">
-            {currentUser.nickname} (나 - 클릭하여 편집)
-          </div>
-        </div>
-
-        <div className="w-8 border-b border-slate-300 dark:border-zinc-800" />
+      <div className="flex flex-col items-center space-y-4 w-full">
 
         {/* Friends List Tab Button */}
         <button
@@ -98,7 +81,7 @@ export function Sidebar({
       </div>
 
       {/* Bottom quick items */}
-      <div className="flex flex-col items-center space-y-4 w-full relative">
+      <div className="flex flex-col items-center space-y-3 w-full relative">
         {/* Notification Bell ON/OFF Toggle */}
         <button
           onClick={handleToggleNotifications}

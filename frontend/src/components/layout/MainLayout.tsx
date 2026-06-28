@@ -117,7 +117,6 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
-        onOpenProfileEdit={() => setIsMyProfileEditOpen(true)}
         onTriggerLogout={() => {
           setConfirmType('logout')
           setConfirmModalOpen(true)
