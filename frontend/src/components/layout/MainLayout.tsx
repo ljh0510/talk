@@ -3,7 +3,6 @@ import { Sidebar } from './Sidebar'
 import { MiddlePanel } from './MiddlePanel'
 import { ChatArea } from '../../features/chat/ChatArea'
 import { SettingsDetail } from '../../features/member/SettingsDetail'
-import { MoreDetail } from '../../features/member/MoreDetail'
 import { LockScreen } from '../ui/LockScreen'
 import { ConfirmModal } from '../modal/ConfirmModal'
 import { useChatStore } from '../../store/useChatStore'
@@ -15,13 +14,11 @@ interface MainLayoutProps {
 }
 
 type SubTabType = 'general' | 'style' | 'security'
-type MoreAppType = 'profile' | 'style' | 'security' | 'info' | 'notifications'
 
 export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
   const { currentUser, logout } = useChatStore()
   const [activeTab, setActiveTab] = useState<'members' | 'chats' | 'settings' | 'more' | 'workspaces'>('chats')
   const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<SubTabType>('general')
-  const [activeMoreApp, setActiveMoreApp] = useState<MoreAppType>('profile')
   const [searchQuery, setSearchQuery] = useState('')
 
   // UI state
@@ -119,8 +116,6 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
         setActiveTab={setActiveTab}
         activeSettingsSubTab={activeSettingsSubTab}
         setActiveSettingsSubTab={setActiveSettingsSubTab}
-        activeMoreApp={activeMoreApp}
-        setActiveMoreApp={setActiveMoreApp}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onTriggerLogout={() => {
@@ -143,15 +138,6 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
               activeSubTab={activeSettingsSubTab}
               darkMode={darkMode}
               setDarkMode={setDarkMode}
-            />
-          )
-        } else if (activeTab === 'more') {
-          return (
-            <MoreDetail
-              activeSubTab={activeMoreApp}
-              darkMode={darkMode}
-              setDarkMode={setDarkMode}
-              triggerToast={triggerToast}
             />
           )
         } else {

@@ -13,15 +13,12 @@ import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 
 type TabType = 'members' | 'chats' | 'settings' | 'more' | 'workspaces'
 type SubTabType = 'general' | 'style' | 'security'
-type MoreAppType = 'profile' | 'style' | 'security' | 'info' | 'notifications'
 
 interface MiddlePanelProps {
   activeTab: TabType
   setActiveTab: (tab: TabType) => void
   activeSettingsSubTab: SubTabType
   setActiveSettingsSubTab: (sub: SubTabType) => void
-  activeMoreApp: MoreAppType
-  setActiveMoreApp: (app: MoreAppType) => void
   searchQuery: string
   setSearchQuery: (query: string) => void
   onTriggerLogout: () => void
@@ -35,8 +32,6 @@ export function MiddlePanel({
   setActiveTab,
   activeSettingsSubTab,
   setActiveSettingsSubTab,
-  activeMoreApp,
-  setActiveMoreApp,
   searchQuery,
   setSearchQuery,
   onTriggerLogout,
@@ -68,7 +63,7 @@ export function MiddlePanel({
     switch (activeTab) {
       case 'members': return '멤버'
       case 'chats': return '채팅'
-      case 'settings': return '설정'
+      case 'settings': return '더보기 > 환경설정'
       case 'more': return '더보기'
       case 'workspaces': return '워크스페이스'
       default: return ''
@@ -294,8 +289,7 @@ export function MiddlePanel({
         )}
         {activeTab === 'more' && (
           <MoreTab
-            activeMoreApp={activeMoreApp}
-            setActiveMoreApp={setActiveMoreApp}
+            onSelectSettings={() => setActiveTab('settings')}
             triggerToast={triggerToast}
           />
         )}

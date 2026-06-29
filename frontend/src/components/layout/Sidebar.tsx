@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useChatStore } from '../../store/useChatStore'
-import { Users, MessageCircle, Search, Bell, BellOff, Settings, LogOut, XSquare, MoreHorizontal } from 'lucide-react'
+import { Users, MessageCircle, Bell, BellOff, LogOut, Power, MoreHorizontal } from 'lucide-react'
 
 interface SidebarProps {
   activeTab: 'members' | 'chats' | 'settings' | 'more' | 'workspaces'
@@ -81,30 +81,9 @@ export function Sidebar({
           )}
         </button>
 
-        {/* 2.5. Search Button (Placeholder) */}
-        <button
-          type="button"
-          className="w-12 h-12 rounded-xl flex items-center justify-center transition-all text-slate-500 hover:bg-slate-300/50 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-200 cursor-not-allowed opacity-80"
-          title="검색 (준비 중)"
-          disabled
-        >
-          <Search size={24} />
-        </button>
 
-        {/* 3. Settings Tab Button */}
-        <button
-          onClick={() => setActiveTab('settings')}
-          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${
-            activeTab === 'settings'
-              ? 'bg-primary-accent text-primary-accent-text shadow'
-              : 'text-slate-500 hover:bg-slate-300/50 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-200'
-          }`}
-          title="환경설정"
-        >
-          <Settings size={24} />
-        </button>
 
-        {/* 4. More Tab Button (Added under Settings Tab) */}
+        {/* 4. More Tab Button */}
         <button
           onClick={() => setActiveTab('more')}
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative ${
@@ -166,7 +145,7 @@ export function Sidebar({
                 }}
                 className="w-full px-3 py-2 text-left text-[11px] font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-955/20 flex items-center space-x-2"
               >
-                <XSquare size={13} className="text-red-500" />
+                <Power size={13} className="text-red-500" />
                 <span>종료</span>
               </button>
             </div>
