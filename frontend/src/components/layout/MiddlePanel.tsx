@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search, Plus, UserPlus, ChevronDown, Check } from 'lucide-react'
+import { Search, Plus, UserPlus, ChevronDown, Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { MembersTab } from '../../features/member/MembersTab'
 import { ChatsTab } from '../../features/chat/ChatsTab'
 import { SettingsTab } from '../../features/member/SettingsTab'
@@ -63,7 +63,7 @@ export function MiddlePanel({
     switch (activeTab) {
       case 'members': return '멤버'
       case 'chats': return '채팅'
-      case 'settings': return '더보기 > 환경설정'
+      case 'settings': return '환경설정'
       case 'more': return '더보기'
       case 'workspaces': return '워크스페이스'
       default: return ''
@@ -182,6 +182,26 @@ export function MiddlePanel({
                 </div>
               </>
             )}
+          </div>
+        ) : activeTab === 'settings' ? (
+          <div className="flex items-center space-x-1.5 -ml-1">
+            <button
+              onClick={() => setActiveTab('more')}
+              className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+              title="더보기로 돌아가기"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <div className="flex items-center space-x-1 text-[11px] font-bold text-slate-400">
+              <span 
+                onClick={() => setActiveTab('more')}
+                className="cursor-pointer hover:text-slate-600 dark:hover:text-zinc-300 transition-colors"
+              >
+                더보기
+              </span>
+              <ChevronRight size={10} className="mt-0.5" />
+              <span className="text-sm font-extrabold text-slate-800 dark:text-zinc-100">환경설정</span>
+            </div>
           </div>
         ) : (
           <h1 className="text-sm font-extrabold text-slate-800 dark:text-zinc-100">{getPanelTitle()}</h1>
