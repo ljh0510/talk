@@ -25,6 +25,7 @@ interface MiddlePanelProps {
   onTriggerExit: () => void
   onTriggerLock: () => void
   triggerToast: (msg: string) => void
+  isFullWidth?: boolean
 }
 
 export function MiddlePanel({
@@ -37,7 +38,8 @@ export function MiddlePanel({
   onTriggerLogout,
   onTriggerExit,
   onTriggerLock,
-  triggerToast
+  triggerToast,
+  isFullWidth
 }: MiddlePanelProps) {
   const { chatRooms, markAsRead, setActiveRoomId, currentUser, activeWorkspaceId, switchWorkspace } = useChatStore()
 
@@ -92,7 +94,7 @@ export function MiddlePanel({
   }
 
   return (
-    <div className="w-[320px] bg-slate-100 dark:bg-zinc-955 border-r border-slate-300 dark:border-zinc-800 flex flex-col h-full select-none shrink-0">
+    <div className={`bg-slate-100 dark:bg-zinc-955 border-r border-slate-300 dark:border-zinc-800 flex flex-col h-full select-none shrink-0 ${isFullWidth ? 'flex-1 border-r-0' : 'w-[320px]'}`}>
       {/* Header - Fixed 64px height to prevent vertical shifts */}
       <div className="h-[64px] px-5 flex items-center justify-between shrink-0">
         

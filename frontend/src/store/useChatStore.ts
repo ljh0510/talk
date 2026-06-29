@@ -81,6 +81,8 @@ interface ChatStore {
   sendMessage: (roomId: number, content: string) => Promise<void>
   markAsRead: (roomId: number) => Promise<void>
   setActiveRoomId: (roomId: number | null) => void
+  chatLayout: 'split' | 'overlay'
+  setChatLayout: (layout: 'split' | 'overlay') => void
 
   // WebSocket action
   setupWebSocket: () => void
@@ -115,6 +117,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   ws: null,
   error: null,
   isLoading: false,
+  chatLayout: (localStorage.getItem('chatLayout') as 'split' | 'overlay') || 'split',
+  setChatLayout: (layout) => {
+    localStorage.setItem('chatLayout', layout)
+    set({ chatLayout: layout })
+  },
 
   login: async (email, password) => {
     set({ isLoading: true, error: null })

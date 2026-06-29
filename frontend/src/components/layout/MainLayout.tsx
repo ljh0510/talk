@@ -16,8 +16,10 @@ interface MainLayoutProps {
 type SubTabType = 'general' | 'style' | 'security'
 
 export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
-  const { currentUser, logout } = useChatStore()
+  const { currentUser, logout, activeRoomId, chatLayout } = useChatStore()
   const [activeTab, setActiveTab] = useState<'members' | 'chats' | 'settings' | 'more' | 'workspaces'>('chats')
+
+  const isOverlayMode = chatLayout === 'overlay'
   const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<SubTabType>('general')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -95,7 +97,7 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
   if (!currentUser) return null
 
   return (
-    <div className={`h-screen flex overflow-hidden ${darkMode ? 'dark' : ''}`}>
+    <div className={`h-screen flex overflow-hidden min-w-[360px] ${darkMode ? 'dark' : ''}`}>
       {/* 1. Global Left Navigation Sidebar */}
       <Sidebar 
         activeTab={activeTab} 
@@ -108,42 +110,50 @@ export function MainLayout({ darkMode, setDarkMode }: MainLayoutProps) {
           setConfirmType('exit')
           setConfirmModalOpen(true)
         }}
+        isHidden={isOverlayMode && activeRoomId !== null && activeTab !== 'settings'}
       />
 
       {/* 2. Middle Panel: Scrollable Lists (Friends, Chats, Settings, or More) */}
-      <MiddlePanel
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        activeSettingsSubTab={activeSettingsSubTab}
-        setActiveSettingsSubTab={setActiveSettingsSubTab}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onTriggerLogout={() => {
-          setConfirmType('logout')
-          setConfirmModalOpen(true)
-        }}
-        onTriggerExit={() => {
-          setConfirmType('exit')
-          setConfirmModalOpen(true)
-        }}
-        onTriggerLock={() => setIsLocked(true)}
-        triggerToast={triggerToast}
-      />
+      <div className={`${isOverlayMode && activeRoomId !== null && activeTab !== 'settings' ? 'hidden' : 'flex'} h-full ${isOverlayMode && activeRoomId === null && activeTab !== 'settings' ? 'flex-1' : 'shrink-0'}`}>
+        <MiddlePanel
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          activeSettingsSubTab={activeSettingsSubTab}
+          setActiveSettingsSubTab={setActiveSettingsSubTab}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onTriggerLogout={() => {
+            setConfirmType('logout')
+            setConfirmModalOpen(true)
+          }}
+          onTriggerExit={() => {
+            setConfirmType('exit')
+            setConfirmModalOpen(true)
+          }}
+          onTriggerLock={() => setIsLocked(true)}
+          triggerToast={triggerToast}
+          isFullWidth={isOverlayMode && activeRoomId === null && activeTab !== 'settings'}
+        />
+      </div>
 
-      {/* 3. Right Panel: Active Chat Room Window OR Settings Detail Page OR More Detail Page */}
-      {(() => {
-        if (activeTab === 'settings') {
-          return (
-            <SettingsDetail
-              activeSubTab={activeSettingsSubTab}
-              darkMode={darkMode}
-              setDarkMode={setDarkMode}
-            />
-          )
-        } else {
-          return <ChatArea />
-        }
-      })()}
+      {/* 3. Right Panel: Active Chat Room Window OR Settings Detail Page */}
+      {(!isOverlayMode || activeRoomId !== null || activeTab === 'settings') && (
+        <div className="flex-1 flex flex-col h-full overflow-hidden">
+          {(() => {
+            if (activeTab === 'settings') {
+              return (
+                <SettingsDetail
+                  activeSubTab={activeSettingsSubTab}
+                  darkMode={darkMode}
+                  setDarkMode={setDarkMode}
+                />
+              )
+            } else {
+              return <ChatArea />
+            }
+          })()}
+        </div>
+      )}
 
       {isLocked && <LockScreen onUnlock={() => setIsLocked(false)} />}
 

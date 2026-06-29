@@ -39,7 +39,7 @@ interface SettingsDetailProps {
 }
 
 export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: SettingsDetailProps) {
-  const { currentUser } = useChatStore()
+  const { currentUser, chatLayout, setChatLayout } = useChatStore()
 
   // General configurations
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
@@ -252,6 +252,46 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
                     }`}
                   />
                 </button>
+              </div>
+
+              {/* Chat Layout Selection */}
+              <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/50 dark:border-zinc-800/80 shadow-sm space-y-4">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-700 dark:text-zinc-200">채팅방 레이아웃</span>
+                  <span className="text-[9px] text-slate-400 mt-0.5">화면 구성 모드를 선택합니다. 최소 너비(800px 미만)에서는 자동으로 단독 뷰로 전환됩니다.</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3.5 pt-1">
+                  <button
+                    onClick={() => {
+                      setChatLayout('split')
+                      triggerToast('레이아웃이 3단 분할 뷰로 변경되었습니다.')
+                    }}
+                    className={`p-3.5 rounded-xl border transition-all flex flex-col items-center justify-center space-y-2 cursor-pointer ${
+                      chatLayout === 'split'
+                        ? 'border-primary-accent bg-primary-accent/5 dark:bg-primary-accent/10 font-bold border-transparent'
+                        : 'border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-900/30'
+                    }`}
+                  >
+                    <span className="text-xs text-slate-800 dark:text-zinc-100">분할 뷰 (기본)</span>
+                    <span className="text-[8px] text-slate-400 dark:text-zinc-400 text-center font-semibold max-w-[130px]">목록과 채팅 영역을 동시에 봅니다.</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setChatLayout('overlay')
+                      triggerToast('레이아웃이 단독 뷰로 변경되었습니다.')
+                    }}
+                    className={`p-3.5 rounded-xl border transition-all flex flex-col items-center justify-center space-y-2 cursor-pointer ${
+                      chatLayout === 'overlay'
+                        ? 'border-primary-accent bg-primary-accent/5 dark:bg-primary-accent/10 font-bold border-transparent'
+                        : 'border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-900/30'
+                    }`}
+                  >
+                    <span className="text-xs text-slate-800 dark:text-zinc-100">단독 뷰 (목록형)</span>
+                    <span className="text-[8px] text-slate-400 dark:text-zinc-400 text-center font-semibold max-w-[130px]">목록만 보이다가 클릭 시 채팅방이 열립니다.</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}

@@ -7,13 +7,15 @@ interface SidebarProps {
   setActiveTab: (tab: 'members' | 'chats' | 'settings' | 'more' | 'workspaces') => void
   onTriggerLogout: () => void
   onTriggerExit: () => void
+  isHidden?: boolean
 }
 
 export function Sidebar({
   activeTab,
   setActiveTab,
   onTriggerLogout,
-  onTriggerExit
+  onTriggerExit,
+  isHidden
 }: SidebarProps) {
   const { currentUser, chatRooms } = useChatStore()
   
@@ -47,7 +49,7 @@ export function Sidebar({
   }
 
   return (
-    <div className="w-[72px] bg-slate-200 dark:bg-zinc-900 border-r border-slate-300 dark:border-zinc-800 flex flex-col items-center py-6 justify-between select-none shrink-0">
+    <div className={`${isHidden ? 'hidden' : 'flex'} w-[72px] bg-slate-200 dark:bg-zinc-900 border-r border-slate-300 dark:border-zinc-800 flex-col items-center py-6 justify-between select-none shrink-0`}>
       <div className="flex flex-col items-center space-y-4 w-full">
 
         {/* 1. Members List Tab Button */}
