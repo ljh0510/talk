@@ -39,7 +39,7 @@ interface SettingsDetailProps {
 }
 
 export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: SettingsDetailProps) {
-  const { currentUser, chatLayout, setChatLayout } = useChatStore()
+  const { currentUser, chatLayout, setChatLayout, chatBgColor, setChatBgColor } = useChatStore()
 
   // General configurations
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
@@ -323,7 +323,7 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
                 </button>
               </div>
 
-              {/* Accent Color picker */}
+              {/* Custom Accent Color picker */}
               <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/50 dark:border-zinc-800/80 shadow-sm space-y-4">
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-slate-700 dark:text-zinc-200">액센트 브랜드 컬러</span>
@@ -378,6 +378,78 @@ export function SettingsDetail({ activeSubTab, darkMode, setDarkMode }: Settings
                           if (val.length === 7) {
                             handleAccentColorChange(val)
                           }
+                        }
+                      }}
+                      placeholder="#ffffff"
+                      className="w-20 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-200 text-[10px] font-mono focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat Background Color Picker */}
+              <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/50 dark:border-zinc-800/80 shadow-sm space-y-4">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-700 dark:text-zinc-200">채팅방 배경색 설정</span>
+                  <span className="text-[9px] text-slate-400 mt-0.5">채팅방 안의 기본 배경 색상을 지정합니다.</span>
+                </div>
+                
+                {/* Preset Chat BG Colors */}
+                <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 pt-1">
+                  {[
+                    { hex: '#BACEE0', title: '카카오 블루' },
+                    { hex: '#F8FAFC', title: '클린 화이트' },
+                    { hex: '#F1F5F9', title: '라이트 슬레이트' },
+                    { hex: '#FEF08A', title: '소프트 옐로우' },
+                    { hex: '#FFD6E8', title: '베이비 핑크' },
+                    { hex: '#DCFCE7', title: '메론 민트' },
+                    { hex: '#1E293B', title: '딥 네이비' },
+                    { hex: '#09090B', title: '미드나잇 다크' },
+                  ].map(colorOpt => (
+                    <button
+                      key={colorOpt.hex}
+                      type="button"
+                      onClick={() => {
+                        setChatBgColor(colorOpt.hex)
+                        triggerToast(`채팅방 배경색이 ${colorOpt.title}로 변경되었습니다.`)
+                      }}
+                      className={`w-9 h-9 rounded-full border-2 transition-all flex items-center justify-center text-[9px] font-bold text-white shadow-md cursor-pointer ${
+                        chatBgColor.toLowerCase() === colorOpt.hex.toLowerCase()
+                          ? 'border-slate-800 dark:border-white scale-110'
+                          : 'border-transparent opacity-85 hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: colorOpt.hex }}
+                      title={colorOpt.title}
+                    >
+                      {chatBgColor.toLowerCase() === colorOpt.hex.toLowerCase() ? '✓' : ''}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom Chat BG Color Picker Tool */}
+                <div className="border-t border-slate-100 dark:border-zinc-855 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-slate-600 dark:text-zinc-300">배경색 커스텀 지정</span>
+                    <span className="text-[8px] text-slate-455 mt-0.5">원하는 색상을 직접 선택하거나 코드를 직접 입력하세요.</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 shrink-0">
+                    <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-slate-300 dark:border-zinc-700 shadow-inner">
+                      <input
+                        type="color"
+                        value={chatBgColor}
+                        onChange={(e) => setChatBgColor(e.target.value)}
+                        className="absolute inset-0 w-full h-full scale-150 cursor-pointer p-0 border-0"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={7}
+                      value={chatBgColor}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (val.startsWith('#') && val.length <= 7) {
+                          setChatBgColor(val)
                         }
                       }}
                       placeholder="#ffffff"

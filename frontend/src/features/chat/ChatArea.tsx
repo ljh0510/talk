@@ -12,7 +12,7 @@ interface ChatAreaProps {
 }
 
 export function ChatArea({ roomId, onClose, isMobile: forceMobile }: ChatAreaProps) {
-  const { currentUser, activeRoomId, activeRoomDetail, sendMessage, setActiveRoomId, chatLayout } = useChatStore()
+  const { currentUser, activeRoomId, activeRoomDetail, sendMessage, setActiveRoomId, chatLayout, chatBgColor } = useChatStore()
   const [messageText, setMessageText] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -116,7 +116,10 @@ export function ChatArea({ roomId, onClose, isMobile: forceMobile }: ChatAreaPro
   if (!currentUser) return null
 
   return (
-    <div className="flex-1 bg-kakao-chatBg dark:bg-zinc-900 flex flex-col h-full relative">
+    <div 
+      className="flex-1 flex flex-col h-full relative"
+      style={{ backgroundColor: chatBgColor }}
+    >
       {localRoomDetail ? (
         <>
           <div className="h-[64px] px-6 bg-white/95 dark:bg-zinc-900/95 flex items-center justify-between select-none glass-panel z-10">

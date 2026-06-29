@@ -83,6 +83,8 @@ interface ChatStore {
   setActiveRoomId: (roomId: number | null) => void
   chatLayout: 'split' | 'overlay'
   setChatLayout: (layout: 'split' | 'overlay') => void
+  chatBgColor: string
+  setChatBgColor: (color: string) => void
 
   // WebSocket action
   setupWebSocket: () => void
@@ -121,6 +123,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setChatLayout: (layout) => {
     localStorage.setItem('chatLayout', layout)
     set({ chatLayout: layout })
+  },
+  chatBgColor: localStorage.getItem('chatBgColor') || '#BACEE0',
+  setChatBgColor: (color) => {
+    localStorage.setItem('chatBgColor', color)
+    set({ chatBgColor: color })
   },
 
   login: async (email, password) => {
