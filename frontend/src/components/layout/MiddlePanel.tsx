@@ -187,13 +187,17 @@ export function MiddlePanel({
           </div>
         ) : activeTab === 'settings' ? (
           <div className="flex items-center space-x-1.5 -ml-1">
-            <button
-              onClick={() => setActiveTab('more')}
-              className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors cursor-pointer"
-              title="더보기로 돌아가기"
-            >
-              <ChevronLeft size={16} />
-            </button>
+            <div className="relative group">
+              <button
+                onClick={() => setActiveTab('more')}
+                className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-800 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <div className="absolute top-8 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all duration-100 origin-top bg-slate-800/95 dark:bg-zinc-800/95 text-white text-[9px] font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap z-50 pointer-events-none select-none">
+                더보기로 돌아가기
+              </div>
+            </div>
             <div className="flex items-center space-x-1 text-[11px] font-bold text-slate-400">
               <span 
                 onClick={() => setActiveTab('more')}
@@ -214,49 +218,67 @@ export function MiddlePanel({
           {activeTab === 'members' && (
             <>
               {/* Search Toggle Icon */}
-              <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className={`p-1.5 rounded-lg transition-colors ${
-                  isSearchOpen 
-                    ? 'bg-slate-300 dark:bg-zinc-700 text-slate-800 dark:text-zinc-150' 
-                    : 'bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-355 hover:bg-slate-300/60 dark:hover:bg-zinc-700/50'
-                }`}
-                title="검색"
-              >
-                <Search size={15} />
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={() => setIsSearchOpen(!isSearchOpen)}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    isSearchOpen 
+                      ? 'bg-slate-300 dark:bg-zinc-700 text-slate-800 dark:text-zinc-150' 
+                      : 'bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-355 hover:bg-slate-300/60 dark:hover:bg-zinc-700/50'
+                  }`}
+                >
+                  <Search size={15} />
+                </button>
+                <div className="absolute top-9 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all duration-100 origin-top bg-slate-800/95 dark:bg-zinc-800/95 text-white text-[9px] font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap z-50 pointer-events-none select-none">
+                  멤버 검색
+                </div>
+              </div>
+              
               {/* Add Member Icon */}
-              <button
-                onClick={() => setIsAddMemberOpen(true)}
-                className="p-1.5 rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-355 hover:bg-slate-300/60 dark:hover:bg-zinc-700/50 transition-colors"
-                title="멤버 추가"
-              >
-                <UserPlus size={15} />
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={() => setIsAddMemberOpen(true)}
+                  className="p-1.5 rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-355 hover:bg-slate-300/60 dark:hover:bg-zinc-700/50 transition-colors cursor-pointer"
+                >
+                  <UserPlus size={15} />
+                </button>
+                <div className="absolute top-9 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all duration-100 origin-top bg-slate-800/95 dark:bg-zinc-800/95 text-white text-[9px] font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap z-50 pointer-events-none select-none">
+                  자주 대화하는 멤버 추가
+                </div>
+              </div>
             </>
           )}
           {activeTab === 'chats' && (
             <>
               {/* Search Toggle Icon */}
-              <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className={`p-1.5 rounded-lg transition-colors ${
-                  isSearchOpen 
-                    ? 'bg-slate-300 dark:bg-zinc-700 text-slate-800 dark:text-zinc-150' 
-                    : 'bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-355 hover:bg-slate-300/60 dark:hover:bg-zinc-700/50'
-                }`}
-                title="검색"
-              >
-                <Search size={15} />
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={() => setIsSearchOpen(!isSearchOpen)}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    isSearchOpen 
+                      ? 'bg-slate-300 dark:bg-zinc-700 text-slate-800 dark:text-zinc-150' 
+                      : 'bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-355 hover:bg-slate-300/60 dark:hover:bg-zinc-700/50'
+                  }`}
+                >
+                  <Search size={15} />
+                </button>
+                <div className="absolute top-9 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all duration-100 origin-top bg-slate-800/95 dark:bg-zinc-800/95 text-white text-[9px] font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap z-50 pointer-events-none select-none">
+                  채팅방 검색
+                </div>
+              </div>
+              
               {/* Create Room Icon */}
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="p-1.5 rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-355 hover:bg-slate-300/60 dark:hover:bg-zinc-700/50 transition-colors"
-                title="새로운 채팅방 생성"
-              >
-                <Plus size={15} />
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="p-1.5 rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-355 hover:bg-slate-300/60 dark:hover:bg-zinc-700/50 transition-colors cursor-pointer"
+                >
+                  <Plus size={15} />
+                </button>
+                <div className="absolute top-9 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all duration-100 origin-top bg-slate-800/95 dark:bg-zinc-800/95 text-white text-[9px] font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap z-50 pointer-events-none select-none">
+                  새로운 채팅방 개설
+                </div>
+              </div>
             </>
           )}
           {(activeTab === 'settings' || activeTab === 'more' || activeTab === 'workspaces') && (
