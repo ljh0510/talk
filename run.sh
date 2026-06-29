@@ -8,6 +8,16 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$ROOT_DIR/backend"
 FRONTEND_DIR="$ROOT_DIR/frontend"
 
+# Clean up existing processes on target ports to avoid port conflicts
+echo "Checking for running processes on ports 8080 and 5173..."
+for port in 8080 5173; do
+    PIDS=$(lsof -t -i :$port 2>/dev/null) || true
+    if [ -n "$PIDS" ]; then
+        echo "Terminating process(es) on port $port (PID: $PIDS)..."
+        kill -9 $PIDS 2>/dev/null || true
+    fi
+done
+
 echo "============================================="
 echo "   KokoaTalk Enterprise Verification & Run   "
 echo "============================================="

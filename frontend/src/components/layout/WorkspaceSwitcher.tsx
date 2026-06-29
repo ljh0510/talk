@@ -37,17 +37,17 @@ export function WorkspaceSwitcher() {
       {/* Target Trigger Header Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-zinc-800/80 bg-slate-50/50 dark:bg-zinc-950/40 hover:bg-slate-50 dark:hover:bg-zinc-900/60 transition-all cursor-pointer shadow-sm hover:scale-[1.01]"
+        className="w-full flex items-center justify-between p-4 bg-transparent hover:bg-slate-200/40 dark:hover:bg-zinc-900/60 transition-colors cursor-pointer"
       >
-        <div className="flex items-center space-x-2.5 min-w-0">
+        <div className="flex items-center space-x-3 min-w-0">
           {activeMembership.workspace_logo ? (
             <img
               src={activeMembership.workspace_logo}
               alt={activeMembership.workspace_name}
-              className="w-8 h-8 rounded-lg object-cover border border-slate-100 dark:border-zinc-800 shadow-sm flex-shrink-0"
+              className="w-9 h-9 rounded-xl object-cover border border-slate-100 dark:border-zinc-800 shadow-sm flex-shrink-0"
             />
           ) : (
-            <div className="w-8 h-8 rounded-lg bg-kakao-yellow/20 dark:bg-yellow-500/10 flex items-center justify-center text-kakao-yellow dark:text-yellow-400 text-xs font-bold border border-kakao-yellow/30 flex-shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-kakao-yellow/20 dark:bg-yellow-500/10 flex items-center justify-center text-kakao-yellow dark:text-yellow-400 text-xs font-bold border border-kakao-yellow/30 flex-shrink-0">
               {activeMembership.workspace_name.substring(0, 2)}
             </div>
           )}
@@ -65,7 +65,7 @@ export function WorkspaceSwitcher() {
 
       {/* Popover Dropdown Overlay */}
       {isOpen && (
-        <div className="absolute left-0 right-0 mt-1.5 bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-slate-200/80 dark:border-zinc-800 z-50 overflow-hidden animate-in fade-in-50 slide-in-from-top-1 duration-150">
+        <div className="absolute left-4 right-4 bottom-[calc(100%+6px)] bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-slate-200/80 dark:border-zinc-800 z-50 overflow-hidden animate-in fade-in-50 slide-in-from-bottom-1 duration-150">
           <div className="p-1.5 max-h-[220px] overflow-y-auto space-y-1">
             <div className="px-3 py-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
               내 워크스페이스 목록

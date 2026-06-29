@@ -9,6 +9,7 @@ import { AddMemberModal } from '../../features/member/AddMemberModal'
 import { FolderManageModal } from '../modal/FolderManageModal'
 import type { ChatFolder } from '../modal/FolderManageModal'
 import { useChatStore } from '../../store/useChatStore'
+import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 
 type TabType = 'members' | 'chats' | 'settings' | 'more' | 'workspaces'
 type SubTabType = 'general' | 'style' | 'security'
@@ -343,6 +344,11 @@ export function MiddlePanel({
             })}
           </div>
         )}
+      </div>
+
+      {/* Bottom Workspace Switcher */}
+      <div className="relative border-t border-slate-200 dark:border-zinc-800/80 bg-slate-50/20 dark:bg-zinc-950/20 shrink-0">
+        <WorkspaceSwitcher />
       </div>
 
       {/* Internal Modals */}

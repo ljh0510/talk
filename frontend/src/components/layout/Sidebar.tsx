@@ -15,10 +15,7 @@ export function Sidebar({
   onTriggerLogout,
   onTriggerExit
 }: SidebarProps) {
-  const { currentUser, chatRooms, activeWorkspaceId } = useChatStore()
-  
-  const activeMembership = currentUser?.memberships?.find(m => m.workspace_id === activeWorkspaceId)
-    || currentUser?.memberships?.[0]
+  const { currentUser, chatRooms } = useChatStore()
   
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
     return localStorage.getItem('notificationsEnabled') !== 'false'
@@ -175,29 +172,6 @@ export function Sidebar({
             </div>
           )}
         </div>
-
-        {/* Workspace Selection Tab Button with safety bottom spacing */}
-        <button
-          onClick={() => setActiveTab('workspaces')}
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all relative overflow-hidden cursor-pointer mb-1 ${
-            activeTab === 'workspaces'
-              ? 'ring-2 ring-kakao-yellow shadow-md scale-105'
-              : 'hover:scale-105 opacity-80 hover:opacity-100'
-          }`}
-          title="워크스페이스 목록"
-        >
-          {activeMembership?.workspace_logo ? (
-            <img
-              src={activeMembership.workspace_logo}
-              alt={activeMembership.workspace_name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-kakao-yellow text-kakao-brown flex items-center justify-center font-black text-sm">
-              {activeMembership?.workspace_name.substring(0, 2) || 'WS'}
-            </div>
-          )}
-        </button>
 
       </div>
     </div>
