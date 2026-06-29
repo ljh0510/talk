@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useChatStore } from '../../store/useChatStore'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/Dialog'
 import { ScrollArea } from '../../components/ui/ScrollArea'
-import { UserPlus, Search, Check, Plus, Folder, Users, ChevronDown, ChevronRight, MapPin, Crown } from 'lucide-react'
+import { UserPlus, Search, Check, Plus, Folder, Users, ChevronDown, ChevronRight, MapPin, Crown, PanelLeft } from 'lucide-react'
 
 interface AddMemberModalProps {
   open: boolean
@@ -22,6 +22,7 @@ export function AddMemberModal({ open, onOpenChange }: AddMemberModalProps) {
   const [selectedDept, setSelectedDept] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [expandedPaths, setExpandedPaths] = useState<string[]>([])
+  const [showDeptTree, setShowDeptTree] = useState(true)
   
   // Resizing Panel States & Refs
   const [leftWidth, setLeftWidth] = useState(230)
@@ -43,6 +44,13 @@ export function AddMemberModal({ open, onOpenChange }: AddMemberModalProps) {
         })
       })
       setExpandedPaths(allPaths)
+
+      // Automatically hide department tree if window screen is narrow
+      if (window.innerWidth < 768) {
+        setShowDeptTree(false)
+      } else {
+        setShowDeptTree(true)
+      }
     } else {
       setSearchQuery('')
       setSelectedDept(null)
@@ -221,6 +229,21 @@ export function AddMemberModal({ open, onOpenChange }: AddMemberModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl h-[580px] flex flex-col p-0 gap-0 overflow-hidden select-none bg-white dark:bg-zinc-900">
         
+        {/* Collapse/Expand Toggle Button placed next to X close button inside DialogContent */}
+        <div className="absolute right-[40px] top-[12px] z-50 group flex flex-col items-center">
+          <button
+            onClick={() => setShowDeptTree((prev) => !prev)}
+            className="p-1 rounded-md text-slate-500 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-850 transition-all cursor-pointer flex items-center justify-center w-6 h-6"
+          >
+            <PanelLeft className="h-4 w-4" />
+          </button>
+          
+          {/* Custom Micro Tooltip Balloon */}
+          <div className="absolute top-7 scale-0 group-hover:scale-100 transition-all duration-100 origin-top bg-slate-800/95 dark:bg-zinc-800/95 text-white dark:text-zinc-100 text-[9px] font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap pointer-events-none select-none border border-slate-700/20">
+            {showDeptTree ? "조직도 접기" : "조직도 펴기"}
+          </div>
+        </div>
+
         {/* Header - Fixed Height */}
         <DialogHeader className="p-5 border-b border-slate-100 dark:border-zinc-800 shrink-0">
           <DialogTitle className="text-sm font-extrabold text-slate-800 dark:text-zinc-100 flex items-center space-x-1.5">
@@ -247,45 +270,49 @@ export function AddMemberModal({ open, onOpenChange }: AddMemberModalProps) {
         >
           
           {/* Left Column: Search & Department Tree (Width bound dynamically to state) */}
-          <div
-            style={{ width: `${leftWidth}px` }}
-            className="border-r border-slate-100 dark:border-zinc-800 p-4 flex flex-col min-h-0 shrink-0 bg-white dark:bg-zinc-900 relative transition-none"
-          >
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="space-y-1.5 pr-1 pb-4">
-                {/* 1. All Employees Button */}
-                <button
-                  onClick={() => setSelectedDept(null)}
-                  className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-left text-xs font-bold transition-all cursor-pointer ${
-                    selectedDept === null
-                      ? 'bg-primary-accent text-primary-accent-text shadow-sm'
-                      : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-900'
-                  }`}
-                >
-                  <Users size={13} className={selectedDept === null ? 'text-primary-accent-text' : 'text-slate-400'} />
-                  <span className="truncate flex-1">전체 임직원</span>
-                  <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${selectedDept === null ? 'bg-black/10 text-primary-accent-text' : 'bg-slate-200 dark:bg-zinc-800 text-slate-500'}`}>
-                    {users.filter(u => currentUser && u.id !== currentUser.id).length}
-                  </span>
-                </button>
+          {showDeptTree && (
+            <div
+              style={{ width: `${leftWidth}px` }}
+              className="border-r border-slate-100 dark:border-zinc-800 p-4 flex flex-col min-h-0 shrink-0 bg-white dark:bg-zinc-900 relative transition-none"
+            >
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="space-y-1.5 pr-1 pb-4">
+                  {/* 1. All Employees Button */}
+                  <button
+                    onClick={() => setSelectedDept(null)}
+                    className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-left text-xs font-bold transition-all cursor-pointer ${
+                      selectedDept === null
+                        ? 'bg-primary-accent text-primary-accent-text shadow-sm'
+                        : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-900'
+                    }`}
+                  >
+                    <Users size={13} className={selectedDept === null ? 'text-primary-accent-text' : 'text-slate-400'} />
+                    <span className="truncate flex-1">전체 임직원</span>
+                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${selectedDept === null ? 'bg-black/10 text-primary-accent-text' : 'bg-slate-200 dark:bg-zinc-800 text-slate-500'}`}>
+                      {users.filter(u => currentUser && u.id !== currentUser.id).length}
+                    </span>
+                  </button>
 
-                {/* 2. Hierarchical Departments Root nodes */}
-                <div className="space-y-0.5">
-                  {deptTree.map((node) => renderDeptNode(node, 0))}
+                  {/* 2. Hierarchical Departments Root nodes */}
+                  <div className="space-y-0.5">
+                    {deptTree.map((node) => renderDeptNode(node, 0))}
+                  </div>
                 </div>
-              </div>
-            </ScrollArea>
-          </div>
+              </ScrollArea>
+            </div>
+          )}
 
           {/* Interactive Draggable Resizer Bar Handle */}
-          <div
-            onMouseDown={() => setIsResizing(true)}
-            className={`absolute top-0 bottom-0 w-[4px] -ml-[2px] z-50 cursor-col-resize transition-colors hover:bg-kakao-yellow/80 active:bg-kakao-yellow ${
-              isResizing ? 'bg-kakao-yellow' : 'bg-transparent'
-            }`}
-            style={{ left: `${leftWidth}px` }}
-            title="마우스로 드래그하여 패널 너비 조절"
-          />
+          {showDeptTree && (
+            <div
+              onMouseDown={() => setIsResizing(true)}
+              className={`absolute top-0 bottom-0 w-[4px] -ml-[2px] z-50 cursor-col-resize transition-colors hover:bg-kakao-yellow/80 active:bg-kakao-yellow ${
+                isResizing ? 'bg-kakao-yellow' : 'bg-transparent'
+              }`}
+              style={{ left: `${leftWidth}px` }}
+              title="마우스로 드래그하여 패널 너비 조절"
+            />
+          )}
 
           {/* Right Column: Breadcrumb & List - Properly Contained */}
           <div className="flex-1 p-4 flex flex-col min-h-0">
